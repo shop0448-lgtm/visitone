@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="description" content="VISIT ONE(비지트원)은 현장 홍보관 방문을 한 곳에서 예약하는 서비스입니다. 건축심의를 통과한 청량리 시그니처 등 현장 정보와 부동산 용어사전, 가이드를 제공합니다.">
+<meta name="description" content="VISIT ONE(비지트원)은 모든 분양 현장의 홍보관 방문을 한 곳에서 예약하는 서비스입니다. 건축심의를 통과한 청량리 시그니처 등 현장 정보와 부동산 용어사전, 가이드를 제공합니다.">
 <link rel="canonical" href="https://visitone.co.kr/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="keywords" content="홍보관 방문 예약, 홍보관 예약, 지역주택조합, 조합원 모집, 청량리 아파트, 동대문구 아파트, 청량리 시그니처">
@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://visitone.co.kr/img/og.jpg">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "VISIT ONE", "alternateName": "비지트원", "url": "https://visitone.co.kr/", "logo": "https://visitone.co.kr/img/icon.png", "description": "프리미엄 홍보관 방문 예약 서비스"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "VISIT ONE 비지트원", "url": "https://visitone.co.kr/", "inLanguage": "ko-KR"}, {"@context": "https://schema.org", "@type": "ItemList", "name": "VISIT ONE 현장", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "청량리 시그니처", "url": "https://visitone.co.kr/cheongnyangni/"}]}]</script>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "VISIT ONE", "alternateName": "비지트원", "legalName": "제이에이치기획", "url": "https://visitone.co.kr/", "logo": "https://visitone.co.kr/img/icon.png", "email": "shop0448@gmail.com", "founder": {"@type": "Person", "name": "하진훈"}, "taxID": "504-28-48757", "address": {"@type": "PostalAddress", "streetAddress": "진건오남로105번길 6, 상가 303", "addressLocality": "남양주시", "addressRegion": "경기도", "addressCountry": "KR"}, "description": "모든 현장 홍보관 방문 예약 서비스"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "VISIT ONE 비지트원", "url": "https://visitone.co.kr/", "inLanguage": "ko-KR"}, {"@context": "https://schema.org", "@type": "ItemList", "name": "VISIT ONE 현장", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "청량리 시그니처", "url": "https://visitone.co.kr/cheongnyangni/"}]}]</script>
 
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -351,6 +351,10 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
 @media (max-width:1024px){.hero-grid{grid-template-columns:1fr;gap:40px;align-items:stretch}.hero .wrap.hero-grid{padding-top:20px}}
 @media (max-width:760px){.meaning{grid-template-columns:1fr;gap:24px}.meaning div{border-left:0;border-top:1px solid var(--line);padding:24px 0 0}.hero-points{gap:18px}.hero-points li{flex:1 1 40%}}
 
+.region-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:14px;color:var(--mute-d);margin:-18px 0 30px}
+.region-links a{color:var(--ink);border-bottom:1px solid var(--gold-d)}
+.region-links span{color:#aaa49a}
+
 /* reveal */
 .rv-up{opacity:0;transform:translateY(30px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
 .rv-up.in{opacity:1;transform:none}
@@ -394,7 +398,82 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
   footer{padding-bottom:110px}
   .fab{bottom:90px}
 }
+
+/* ── 포털 ── */
+.hero{min-height:auto!important;padding:150px 0 90px}
+.hero .scroll{display:none}
+.hsearch{display:flex;margin-top:30px;max-width:560px;border:1px solid var(--gold);background:rgba(12,12,13,.6)}
+.hsearch input{flex:1;min-width:0;background:transparent;border:0;color:var(--ivory);padding:16px 18px;font:inherit;font-size:15px;outline:none}
+.hsearch input::placeholder{color:#8e8a82}
+.hsearch button{background:var(--gold);color:var(--ink);border:0;padding:0 26px;font:inherit;font-weight:500;letter-spacing:.1em;cursor:pointer}
+.hquick{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.hquick a{font-size:13px;color:var(--ivory-2);border:1px solid var(--line);padding:6px 12px}
+.hquick a:hover{border-color:var(--gold);color:var(--gold-2)}
+.portal{background:var(--paper);color:var(--ink);padding:56px 0 30px}
+.pgrid3{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:18px}
+.pbox{background:#fff;border:1px solid var(--line-d);padding:20px 22px;min-width:0}
+.pbh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
+.pbh b{font-size:17px}
+.pbh a{font-size:12.5px;color:var(--gold-d)}
+.evl{list-style:none;margin:0;padding:0}
+.evl li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line-d);font-size:14px;min-width:0}
+.evl li a{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.evl li a:hover{color:var(--gold-d)}
+.evl li small{color:var(--mute-d);font-size:12px;white-space:nowrap}
+.evl li.empty{color:var(--mute-d);font-size:13px;justify-content:center;padding:22px 0}
+.evl .dd{font-size:12px;font-weight:700;color:var(--gold-d);min-width:58px}
+.ek{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.ek-특별공급{background:#efe6f8;color:#5a2d8c}.ek-청약{background:var(--gold);color:var(--ink)}.ek-당첨{background:#e9f1ff;color:#1d4fb8}.ek-계약{background:#e8f4ec;color:#1f6b3a}
+.rg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.rg a{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line-d);padding:9px 11px;font-size:14px}
+.rg a span{font-size:12px;color:var(--gold-d);font-weight:700}
+.rg a:hover{border-color:var(--gold);background:var(--paper)}
+.rg a.zero{opacity:.45}
+.evl li.nx{font-size:12.5px;color:var(--mute-d);background:var(--paper);padding:8px 10px;margin-top:6px;border:0}
+.evl li.nx b{color:var(--ink);margin-left:4px}
+
+.ptabs{justify-content:flex-start!important;gap:4px}
+.ptabs button{background:none;border:0;font:inherit;font-size:16px;font-weight:700;color:var(--mute-d);padding:0 10px 0 0;cursor:pointer}
+.ptabs button.on{color:var(--ink)}
+.ptabs button+button{border-left:1px solid var(--line-d);padding-left:10px}
+.ptabs a{margin-left:auto}
+.qlinks{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;background:#fff;border:1px solid var(--line-d);padding:12px 16px;font-size:13px}
+.qlinks b{margin-right:8px;font-size:14px}
+.qlinks a{border:1px solid var(--line-d);padding:5px 11px;color:#3c3a36}
+.qlinks a:hover{border-color:var(--gold);color:var(--gold-d)}
+.fit{background:var(--ivory);color:var(--ink);padding:80px 0 90px;border-top:1px solid var(--line-d)}
+.fit .kicker{color:var(--gold-d)}.fit .kicker::before{background:var(--gold-d)}
+.fit-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:34px;flex-wrap:wrap}
+.fit h2{font-family:"Noto Serif KR",serif;font-weight:400;font-size:clamp(28px,3.4vw,42px);margin-top:16px;line-height:1.3}
+.fit h2 em{font-style:normal;color:var(--gold-d)}
+.fit-side{max-width:520px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.fit-sum{font-size:14.5px;color:#3c3a36;margin:0}
+.fit-sum b{color:var(--gold-d);margin-right:4px}
+.fit-btn{background:var(--ink);color:#fff;border:0;padding:13px 24px;font:inherit;font-size:14px;letter-spacing:.06em;cursor:pointer}
+.fit-btn:hover{background:var(--gold);color:var(--ink)}
+.pl .why{display:flex;flex-wrap:wrap;gap:4px}
+.pl .why i{font-style:normal;font-size:11.5px;background:#f6efe0;color:#7a5f2c;padding:2px 7px;border-radius:3px}
+.pupd{font-size:12px;color:var(--mute-d);margin-top:14px;text-align:right}
+#sites{padding-top:90px!important}
+.latest{padding:100px 0 110px;border-top:1px solid var(--line-d)}
+.sh2{margin-top:90px}
+.pl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pl li a{display:flex;flex-direction:column;gap:6px;height:100%;background:#fff;border:1px solid var(--line-d);padding:18px;transition:border-color .2s,transform .2s}
+.pl li a:hover{border-color:var(--gold);transform:translateY(-2px)}
+.pl li a .st{align-self:flex-start}
+.pl b{font-size:16px;line-height:1.4;margin-top:4px}
+.pl small{font-size:12px;color:var(--mute-d)}
+.pl span:not(.st){font-size:12.5px;color:#3c3a36;border-top:1px dashed var(--line-d);padding-top:8px;margin-top:auto}
+.pl em{font-style:normal;font-weight:700;color:var(--gold-d);font-size:13.5px}
+.pl li.empty{grid-column:1/-1;background:#fff;border:1px dashed var(--line-d);padding:30px;text-align:center;color:var(--mute-d);font-size:14px}
+.more{text-align:right;margin-top:18px;font-size:14px}
+.more a{color:var(--gold-d);border-bottom:1px solid var(--gold-d)}
+.st{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st-예정{background:#e9f1ff;color:#1d4fb8}.st-접수중{background:var(--gold);color:var(--ink)}.st-발표대기{background:#f3ecdc;color:#8a6d38}.st-계약예정,.st-계약중{background:#e8f4ec;color:#1f6b3a}.st-마감{background:#eeece7;color:#8b877f}
+@media(max-width:1024px){.pgrid3{grid-template-columns:1fr 1fr}.pgrid3 .pbox:last-child{grid-column:1/-1}.rg{grid-template-columns:repeat(6,1fr)}.pl{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.evl li small{display:none}.hero{padding:120px 0 60px}.pgrid3{grid-template-columns:1fr}.rg{grid-template-columns:repeat(3,1fr)}.pl{grid-template-columns:1fr}.hsearch button{padding:0 16px}.portal{padding:36px 0 20px}.latest{padding:70px 0}}
 </style>
+<link rel="stylesheet" href="/assets/match.css">
 </head>
 <body>
 
@@ -402,11 +481,12 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
   <div class="wrap">
     <a href="#top" class="logo" aria-label="처음으로"><svg class="mk" viewBox="0 0 80 100" aria-hidden="true"><path d="M10 96 L10 40 A30 30 0 0 1 70 40 L70 96" fill="none" stroke="currentColor" stroke-width="3"/><path d="M50 22 L66 34 L66 96 L50 96 Z" fill="currentColor" fill-opacity=".22"/><path d="M18 44 L32 82 L50 38" fill="none" stroke="currentColor" stroke-width="5"/><path d="M50 22 L50 96" fill="none" stroke="currentColor" stroke-width="5"/></svg><b id="brandName">VISIT ONE</b><span id="brandSub">비지트원</span></a>
     <nav><ul id="nav">
-      <li><a href="#sites">현장 안내</a></li>
-      <li><a href="#process">이용 방법</a></li>
-      <li><a href="/glossary/">용어사전</a></li>
+      <li><a href="/bunyang/">분양정보</a></li>
+      <li><a href="/calendar/">청약캘린더</a></li>
+      <li><a href="/remain/">무순위·잔여</a></li>
+      <li><a href="#sites">추천 현장</a></li>
+      <li><a href="/news/">분양 소식</a></li>
       <li><a href="/guide/">가이드</a></li>
-      <li><a href="#contact-ft">고객센터</a></li>
     </ul></nav>
     <a href="#reserve" class="hbtn">방문 예약</a>
     <button class="menu" id="menuBtn" aria-label="메뉴" aria-expanded="false"><i></i><i></i><i></i></button>
@@ -419,13 +499,13 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
   <div class="wrap hero-grid">
     <div>
       <div class="kicker rv-up">All Sites · One Reservation</div>
-      <h1 class="rv-up">모든 현장 홍보관,<br><em>한 곳에서 예약</em>하세요.</h1>
-      <p class="rv-up">VISIT ONE은 여러 현장의 홍보관 방문을 한 번에 예약하는 서비스입니다. 현장과 시간만 고르면, 예약한 시간에 전담 상담사가 대기 없이 1:1로 맞이합니다.</p>
-      <ul class="hero-points rv-up">
-        <li><b>한 곳에서</b>여러 현장 비교·예약</li>
-        <li><b>대기 없이</b>예약 시간 바로 상담</li>
-        <li><b>1:1 전담</b>현장 전문 상담사 배정</li>
-      </ul>
+      <h1 class="rv-up">모든 분양 현장,<br><em>한 곳에서</em> 보고 예약하세요.</h1>
+      <p class="rv-up">전국 분양·청약 정보는 한눈에, 마음에 드는 현장의 홍보관 방문은 한 번에. 예약한 시간에 전담 상담사가 대기 없이 1:1로 맞이합니다.</p>
+      <form class="hsearch rv-up" action="/bunyang/" method="get" role="search">
+        <input name="q" type="search" placeholder="단지명 또는 지역으로 분양정보 검색 (예: 강동, 자이)" aria-label="분양정보 검색">
+        <button type="submit">검색</button>
+      </form>
+      <div class="hquick rv-up"><a href="/calendar/">오늘의 청약</a><a href="/bunyang/seoul/">서울 분양</a><a href="/bunyang/gyeonggi/">경기 분양</a><a href="/remain/">무순위·줍줍</a><a href="/cheongnyangni/">청량리 시그니처</a></div>
     </div>
     <form class="quick rv-up" id="quick" aria-labelledby="quickTitle">
       <div class="q-head"><span class="en">Quick Booking</span><b id="quickTitle">빠른 방문 예약</b></div>
@@ -439,6 +519,57 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
   </div>
   <div class="scroll" aria-hidden="true">SCROLL<i></i></div>
 </div>
+
+<section class="portal" id="portal">
+  <div class="wrap">
+    <div class="pgrid3">
+      <div class="pbox"><div class="pbh ptabs" role="tablist"><button type="button" class="on" data-t="t1" role="tab">오늘 청약</button><button type="button" data-t="t2" role="tab">당첨 발표</button><a href="/calendar/">캘린더 →</a></div><ul class="evl" id="t1"><!--AUTO:today--><li class="nx">오늘은 청약 일정이 없어요 · 다음 일정 <b>11.2(월)</b></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026930043/">과천 디에트르 퍼스티지(S2BL)</a><small>경기</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026910278/">숭의역 노르웨이숲 더 스카이</a><small>인천</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026910275/">더샵 분당하이스트</a><small>경기</small></li><li><span class="ek ek-특별공급">특별공급</span><a href="/danji/2026930042/">파주 운정신도시 우미 린 더 센텀</a><small>경기</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026910269/">화서역 호수공원 아너스빌</a><small>경기</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026910257/">파주 운정신도시 우미 린 더 센텀</a><small>경기</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026820012/">시흥하중지구 A1블록 신혼희망타운(공공분양) 추가입주자모집공고</a><small>경기</small></li><li><span class="ek ek-특별공급">특별공급</span><a href="/danji/2026000532/">계양신도시 카이브 유보라(AC4BL)</a><small>인천</small></li><li><span class="ek ek-청약">청약 접수</span><a href="/danji/2026000531/">시흥거모지구 S-1블록 공공분양(본청약)</a><small>경기</small></li><!--/AUTO:today--></ul><ul class="evl" id="t2" hidden><!--AUTO:todaywin--><li class="nx">오늘은 당첨 발표 일정이 없어요 · 다음 일정 <b>11.2(월)</b></li><li><span class="ek ek-당첨">당첨 발표</span><a href="/danji/2026950088/">GD 메트로 타워</a><small>서울</small></li><li><span class="ek ek-당첨">당첨 발표</span><a href="/danji/2026910271/">힐스테이트 레이크 송도 4차(2차)</a><small>인천</small></li><li><span class="ek ek-당첨">당첨 발표</span><a href="/danji/2026910270/">충정로역자이르네(2차)</a><small>서울</small></li><!--/AUTO:todaywin--></ul></div>
+      <div class="pbox"><div class="pbh"><b>이번 주 접수 예정</b><a href="/bunyang/">전체 →</a></div><ul class="evl"><!--AUTO:week--><li><span class="dd">11.2(월)</span><a href="/danji/2026930043/">과천 디에트르 퍼스티지(S2BL)</a><small>경기 · 불법행위 재공급</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026910278/">숭의역 노르웨이숲 더 스카이</a><small>인천 · 무순위</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026910275/">더샵 분당하이스트</a><small>경기 · 무순위</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026930042/">파주 운정신도시 우미 린 더 센텀</a><small>경기 · 불법행위 재공급</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026910269/">화서역 호수공원 아너스빌</a><small>경기 · 무순위</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026910257/">파주 운정신도시 우미 린 더 센텀</a><small>경기 · 무순위</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026820012/">시흥하중지구 A1블록 신혼희망타운(공공분양) 추가입주자모집공고</a><small>경기 · 아파트</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026000532/">계양신도시 카이브 유보라(AC4BL)</a><small>인천 · 아파트</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026000531/">시흥거모지구 S-1블록 공공분양(본청약)</a><small>경기 · 아파트</small></li><li><span class="dd">11.2(월)</span><a href="/danji/2026000530/">계양신도시 카이브 유보라(AC3BL)</a><small>인천 · 아파트</small></li><!--/AUTO:week--></ul></div>
+      <div class="pbox"><div class="pbh"><b>지역별 분양</b><a href="/bunyang/">전국 →</a></div><div class="rg"><!--AUTO:regions--><a href="/bunyang/seoul/"><b>서울</b><span>4</span></a><a href="/bunyang/gyeonggi/"><b>경기</b><span>23</span></a><a href="/bunyang/incheon/"><b>인천</b><span>6</span></a><a class="zero" href="/bunyang/"><b>부산</b><span>0</span></a><a class="zero" href="/bunyang/"><b>대구</b><span>0</span></a><a class="zero" href="/bunyang/"><b>광주</b><span>0</span></a><a class="zero" href="/bunyang/"><b>대전</b><span>0</span></a><a class="zero" href="/bunyang/"><b>울산</b><span>0</span></a><a class="zero" href="/bunyang/"><b>세종</b><span>0</span></a><a class="zero" href="/bunyang/"><b>강원</b><span>0</span></a><a class="zero" href="/bunyang/"><b>충북</b><span>0</span></a><a class="zero" href="/bunyang/"><b>충남</b><span>0</span></a><a class="zero" href="/bunyang/"><b>전북</b><span>0</span></a><a class="zero" href="/bunyang/"><b>전남</b><span>0</span></a><a class="zero" href="/bunyang/"><b>경북</b><span>0</span></a><a class="zero" href="/bunyang/"><b>경남</b><span>0</span></a><a class="zero" href="/bunyang/"><b>제주</b><span>0</span></a><!--/AUTO:regions--></div></div>
+    </div>
+    <div class="qlinks"><b>빠른 청약 서비스</b><a href="https://www.applyhome.co.kr/" target="_blank" rel="noopener">청약홈</a><a href="https://apply.lh.or.kr/" target="_blank" rel="noopener">LH청약플러스</a><a href="https://www.i-sh.co.kr/" target="_blank" rel="noopener">SH 서울주택도시공사</a><a href="https://www.gh.or.kr/" target="_blank" rel="noopener">GH 경기주택도시공사</a><a href="https://www.myhome.go.kr/" target="_blank" rel="noopener">마이홈포털</a></div>
+    <p class="pupd">청약홈 공공데이터 기준 · 매일 업데이트 · 기준일 <!--AUTO:updated-->2026-10-31<!--/AUTO:updated--></p>
+  </div>
+</section>
+
+<section class="fit" id="fit">
+  <div class="wrap">
+    <div class="fit-head">
+      <div><div class="kicker">For You</div><h2>나에게 맞는 <em>분양</em></h2></div>
+      <div class="fit-side"><p class="fit-sum"></p><button type="button" class="fit-btn">내 조건 설정하기</button></div>
+    </div>
+    <ul class="pl fit-list"><li class="empty">불러오는 중…</li></ul>
+    <p class="more fit-more"></p>
+  </div>
+</section>
+
+<section id="sites" class="light">
+  <div class="wrap">
+    <div class="sh">
+      <div><div class="kicker rv-up">VISIT ONE Pick</div><h2 class="rv-up">홍보관 방문 예약 가능한<br><em>추천 현장</em></h2></div>
+      <p class="rv-up">VISIT ONE이 직접 확인하고 소개하는 현장입니다. 전담 상담사가 예약 시간에 맞춰 1:1로 안내합니다.</p>
+    </div>
+    <div class="filters" id="filters" role="group" aria-label="현장 필터"></div>
+    
+    <div class="sites" id="siteList"><article class="site"><div class="ph"><img src="img/site_cheongnyangni.jpg" alt="청량리 시그니처 조감도"><span class="badge open">모집중</span><span class="badge pass">건축심의 통과</span></div><div class="bd"><div class="type">지역주택조합 · 조합원 모집</div><h3>청량리 시그니처</h3><div class="addr">서울 동대문구 전농동 60-22번지 일원</div><dl><div><dt>세대수</dt><dd>556세대</dd></div><div><dt>규모</dt><dd>B3~20F · 9개동</dd></div><div><dt>타입</dt><dd>59·74·84㎡</dd></div></dl><div class="tags"><span>건축심의 통과</span><span>지구단위계획 고시 완료</span><span>청량리역 생활권</span><span>면목선 전농역(예정)</span></div><div class="act"><a href="cheongnyangni/">현장 자세히 보기</a><a class="primary" href="#reserve">방문 예약</a></div></div></article></div>
+  </div>
+</section>
+<section class="latest light" id="latest">
+  <div class="wrap">
+    <div class="sh">
+      <div><div class="kicker">New Notices</div><h2>최신 <em>분양공고</em></h2></div>
+      <p>최근 입주자모집공고가 나온 아파트·오피스텔 단지입니다. 단지를 누르면 청약 일정과 타입별 분양가를 볼 수 있습니다.</p>
+    </div>
+    <ul class="pl"><!--AUTO:latest--><li><a href="/danji/2026820013/"><span class="st st-예정">접수 D-16</span><b>안산신길2 A-6블록 신혼희망타운(공공분양)(본청약)</b><small>경기 · 아파트 · 251세대</small><span>접수 11.16(월) · 발표 12.4(금)</span><em>4억 5,692만 ~ 4억 6,658만</em></a></li><li><a href="/danji/2026000533/"><span class="st st-예정">접수 D-9</span><b>안산신길2지구 B-1블록 공공분양주택(본청약)</b><small>경기 · 아파트 · 387세대</small><span>접수 11.9(월) · 발표 11.30(월)</span><em>5억 1,190만 ~ 6억 116만</em></a></li><li><a href="/danji/2026000528/"><span class="st st-예정">접수 D-9</span><b>광교 자연앤 센트레빌(A17BL) 공공분양주택</b><small>경기 · 아파트 · 360세대</small><span>접수 11.9(월) · 발표 11.17(화)</span><em>9억 3,860만 ~ 9억 4,930만</em></a></li><li><a href="/danji/2026000527/"><span class="st st-예정">접수 D-9</span><b>광교 자연앤 센트레빌(A17BL) 지분적립형 분양주택</b><small>경기 · 아파트 · 240세대</small><span>접수 11.9(월) · 발표 11.18(수)</span><em>6억 6,790만 ~ 6억 8,590만</em></a></li><li><a href="/danji/2026000515/"><span class="st st-예정">접수 D-9</span><b>평택 고덕 우미 린 더 프리미어</b><small>경기 · 아파트 · 623세대</small><span>접수 11.9(월) · 발표 11.17(화)</span><em>5억 6,790만 ~ 6억 2,010만</em></a></li><li><a href="/danji/2026000472/"><span class="st st-예정">접수 D-9</span><b>구리갈매역세권 B-1블록 신안인스빌 디센트</b><small>경기 · 아파트 · 213세대</small><span>접수 11.9(월) · 발표 11.17(화)</span><em>6억 9,580만 ~ 7억 8,500만</em></a></li><li><a href="/danji/2026000535/"><span class="st st-예정">접수 D-9</span><b>중앙하이츠 구성 플랫폼시티</b><small>경기 · 아파트 · 76세대</small><span>접수 11.9(월) · 발표 11.18(수)</span><em>6억 2,500만 ~ 8억 5,210만</em></a></li><li><a href="/danji/2026000525/"><span class="st st-예정">접수 D-9</span><b>엘리프 시흥 더프라임</b><small>경기 · 아파트 · 304세대</small><span>접수 11.9(월) · 발표 11.17(화)</span><em>5억 9,910만 ~ 5억 9,930만</em></a></li><!--/AUTO:latest--></ul>
+    <p class="more"><a href="/bunyang/">전국 분양정보 전체 보기 →</a></p>
+    <div class="sh sh2">
+      <div><div class="kicker">Remaining Units</div><h2>무순위 · <em>잔여세대</em></h2></div>
+      <p>청약통장 없이도 신청할 수 있는 경우가 많은 무순위·잔여세대 물량입니다. 자격 요건은 단지별 공고문을 꼭 확인하세요.</p>
+    </div>
+    <ul class="pl"><!--AUTO:remain--><li><a href="/danji/2026930043/"><span class="st st-예정">접수 D-2</span><b>과천 디에트르 퍼스티지(S2BL)</b><small>경기 · 불법행위 재공급 · 2세대</small><span>접수 11.2(월) · 발표 11.5(목)</span></a></li><li><a href="/danji/2026910278/"><span class="st st-예정">접수 D-2</span><b>숭의역 노르웨이숲 더 스카이</b><small>인천 · 무순위 · 13세대</small><span>접수 11.2(월) · 발표 11.5(목)</span></a></li><li><a href="/danji/2026910275/"><span class="st st-예정">접수 D-2</span><b>더샵 분당하이스트</b><small>경기 · 무순위 · 58세대</small><span>접수 11.2(월) · 발표 11.5(목)</span></a></li><li><a href="/danji/2026930042/"><span class="st st-예정">접수 D-2</span><b>파주 운정신도시 우미 린 더 센텀</b><small>경기 · 불법행위 재공급 · 1세대</small><span>접수 11.2(월) · 발표 11.5(목)</span></a></li><li><a href="/danji/2026910269/"><span class="st st-예정">접수 D-2</span><b>화서역 호수공원 아너스빌</b><small>경기 · 무순위 · 169세대</small><span>접수 11.2(월) · 발표 11.6(금)</span></a></li><li><a href="/danji/2026910257/"><span class="st st-예정">접수 D-2</span><b>파주 운정신도시 우미 린 더 센텀</b><small>경기 · 무순위 · 2세대</small><span>접수 11.2(월) · 발표 11.5(목)</span></a></li><!--/AUTO:remain--></ul>
+    <p class="more"><a href="/remain/">무순위·잔여세대 전체 보기 →</a></p>
+  </div>
+</section>
 
 <div class="intro">
   <div class="wrap">
@@ -469,16 +600,7 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
   </div>
 </section>
 
-<section id="sites" class="light">
-  <div class="wrap">
-    <div class="sh">
-      <div><div class="kicker rv-up">Our Projects</div><h2 class="rv-up">지금 만나볼 수 있는<br><em>현장 안내</em></h2></div>
-      <p class="rv-up">현장 정보를 확인하고 원하시는 홍보관 방문을 바로 예약하실 수 있습니다.</p>
-    </div>
-    <div class="filters" id="filters" role="group" aria-label="현장 필터"></div>
-    <div class="sites" id="siteList"><article class="site"><div class="ph"><img src="img/site_cheongnyangni.jpg" alt="청량리 시그니처 조감도"><span class="badge open">모집중</span><span class="badge pass">건축심의 통과</span></div><div class="bd"><div class="type">지역주택조합 · 조합원 모집</div><h3>청량리 시그니처</h3><div class="addr">서울 동대문구 전농동 60-22번지 일원</div><dl><div><dt>세대수</dt><dd>556세대</dd></div><div><dt>규모</dt><dd>B3~20F · 9개동</dd></div><div><dt>타입</dt><dd>59·74·84㎡</dd></div></dl><div class="tags"><span>건축심의 통과</span><span>지구단위계획 고시 완료</span><span>청량리역 생활권</span><span>면목선 전농역(예정)</span></div><div class="act"><a href="cheongnyangni/">현장 자세히 보기</a><a class="primary" href="#reserve">방문 예약</a></div></div></article></div>
-  </div>
-</section>
+
 
 
 
@@ -548,8 +670,8 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
         </div>
 
         <div class="fs" id="fs-agree" style="margin-bottom:20px">
-          <label class="agree"><input type="checkbox" id="agree"><span><b>[필수] 개인정보 수집·이용 동의</b><br>수집 항목: 성함, 연락처, 방문 현장 및 일시 · 목적: 방문 예약 확인 및 상담 안내 · 보유 기간: 상담 완료 후 1년 또는 삭제 요청 시까지</span></label>
-          <div class="err">개인정보 수집·이용에 동의해 주세요.</div>
+          <label class="agree"><input type="checkbox" id="agree"><span><b>[필수] 개인정보 수집·이용 동의</b><br>수집 항목: 성함, 연락처, 방문 현장 및 일시 · 목적: 방문 예약 확인 및 상담 안내 · 보유 기간: 상담 완료 후 1년 또는 삭제 요청 시까지<br><b>[필수] 개인정보 제3자 제공 동의</b><br>제공받는 자: 예약하신 현장의 홍보관(분양·모집 대행사) · 목적: 방문 상담 진행 · 항목: 성함, 연락처, 방문 일시, 관심 타입 · 보유 기간: 상담 완료 시까지 <a href="/privacy/" target="_blank" style="text-decoration:underline">처리방침 보기</a></span></label>
+          <div class="err">개인정보 수집·이용 및 제3자 제공에 동의해 주세요.</div>
         </div>
 
         <button type="submit" class="submit" id="submitBtn">방문 예약 신청 <i class="arr" style="width:26px;height:1px;background:currentColor;position:relative;display:inline-block"></i></button>
@@ -591,7 +713,7 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
     <div class="ft">
       <div>
         <a href="#top" class="logo" style="margin-bottom:20px"><svg class="mk" viewBox="0 0 80 100" aria-hidden="true"><path d="M10 96 L10 40 A30 30 0 0 1 70 40 L70 96" fill="none" stroke="currentColor" stroke-width="3"/><path d="M50 22 L66 34 L66 96 L50 96 Z" fill="currentColor" fill-opacity=".22"/><path d="M18 44 L32 82 L50 38" fill="none" stroke="currentColor" stroke-width="5"/><path d="M50 22 L50 96" fill="none" stroke="currentColor" stroke-width="5"/></svg><b id="ftBrand">VISIT ONE</b></a>
-        <ul style="list-style:none;margin-top:18px;line-height:2;font-size:13.5px"><li><a href="/glossary/">부동산 용어사전</a></li><li><a href="/guide/">방문 가이드</a></li><li><a href="/area/dongdaemun/">동대문구·청량리 지역 정보</a></li></ul>
+        <ul style="list-style:none;margin-top:18px;line-height:2;font-size:13.5px"><li><a href="/glossary/">부동산 용어사전</a></li><li><a href="/guide/">방문 가이드</a></li><li><a href="/area/dongdaemun/">동대문구·청량리 지역 정보</a></li><li><a href="/news/">분양 소식</a></li><li><a href="/service/">서비스 소개</a></li><li><a href="/partner/">현장 입점·제휴 문의</a></li><li><a href="/about/">회사 소개</a></li><li><a href="/privacy/"><b>개인정보처리방침</b></a></li></ul>
         <p id="ftDesc">한 번의 예약, 1:1 프라이빗 상담<br>프리미엄 홍보관 방문 예약 서비스</p>
       </div>
       <div><h5>PROJECTS</h5><ul id="ftSites"></ul></div>
@@ -614,10 +736,10 @@ const CONFIG = {
   brand: "VISIT ONE",
   brandSub: "비지트원",
   phone: "",            // 대표번호 예: "1600-0000"
-  email: "",
-  office: "",           // 본사 주소
+  email: "shop0448@gmail.com",
+  office: "경기도 남양주시 진건오남로105번길 6, 상가 303",           // 본사 주소
   hours: "평일·주말 10:00 – 18:00",
-  bizInfo: "",          // 예: "상호 ○○○ | 대표 ○○○ | 사업자등록번호 000-00-00000"
+  bizInfo: "상호 제이에이치기획 · 대표 하진훈 · 사업자등록번호 504-28-48757 · 통신판매업 신고 2021-진건퇴계원-278",
   daysAhead: 21
 };
 
@@ -912,5 +1034,7 @@ $("#acsv").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(csv); $("#amsg").textContent = "CSV가 복사되었습니다. 엑셀에 붙여넣으세요."; } catch (e) { $("#amsg").textContent = "복사가 차단되었습니다."; }
 });
 </script>
+<script src="/assets/match.js" defer></script>
+<script>document.querySelectorAll('.ptabs button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.ptabs button').forEach(function(x){x.classList.toggle('on',x===b);document.getElementById(x.dataset.t).hidden=x!==b;});});});</script>
 </body>
 </html>

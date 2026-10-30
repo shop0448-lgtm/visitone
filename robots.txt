@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /_build/
 Allow: /
 
 # AI 검색·답변 서비스 허용
