@@ -355,25 +355,53 @@ if(qi)qi.addEventListener('input',function(){st.q=qi.value.trim();ap();});window
            "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate(items[:100])]}]
     return page(ROOT, path, title, desc, body, crumbs, ld, og_type="website", updated=updated)
 
+KORD = ("특별공급", "청약 접수", "당첨 발표", "계약 시작")
+
 def calendar_page(all_h, updated):
+    first = TODAY.replace(day=1)
+    nm = (first + dt.timedelta(days=32)).replace(day=1)
+    months = [first, nm]
+    end = (nm + dt.timedelta(days=32)).replace(day=1) - dt.timedelta(days=1)
     ev = {}
     for h in all_h:
         for kind, key in (("특별공급", "sp_b"), ("청약 접수", "r_b"), ("당첨 발표", "win"), ("계약 시작", "c_b")):
             x = d(h[key])
-            if x and (TODAY - dt.timedelta(days=3)) <= x <= (TODAY + dt.timedelta(days=45)):
+            if x and first <= x <= end:
                 if kind == "청약 접수" and h["sp_b"] == h["r_b"]: continue
                 ev.setdefault(x, []).append((kind, h))
-    days = sorted(ev)
+    for x in ev: ev[x].sort(key=lambda e: KORD.index(e[0]))
+    # 월 달력
+    grids = []
+    for mi, m in enumerate(months):
+        last = ((m + dt.timedelta(days=32)).replace(day=1) - dt.timedelta(days=1)).day
+        lead = (m.weekday() + 1) % 7   # 일요일 시작
+        cells = ['<div class="cc empty"></div>'] * lead
+        for day in range(1, last + 1):
+            x = m.replace(day=day)
+            items = ev.get(x, [])
+            cls = "cc" + (" today" if x == TODAY else "") + (" past" if x < TODAY else "") + (" has" if items else "") + (" sun" if x.weekday() == 6 else "") + (" sat" if x.weekday() == 5 else "")
+            chips = "".join(f'<a class="ce ce-{k.split()[0]}" href="/danji/{h["id"]}/" title="{esc(k)} · {esc(h["name"])}"><i></i>{esc(h["name"])}</a>' for k, h in items[:3])
+            more = f'<a class="cm" href="#d{x.isoformat()}">+{len(items) - 3}건 더보기</a>' if len(items) > 3 else ""
+            cnt = f'<span class="cn">{len(items)}건</span>' if items else ""
+            cells.append(f'<div class="{cls}" data-k="{" ".join(sorted({k.split()[0] for k, _ in items}))}"><a class="cd" href="#d{x.isoformat()}">{day}</a>{cnt}<div class="cl">{chips}{more}</div></div>')
+        while len(cells) % 7: cells.append('<div class="cc empty"></div>')
+        grids.append(f'<div class="cal" id="m{mi}"{" hidden" if mi else ""}><div class="cw"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div><div class="cg">{"".join(cells)}</div></div>')
+    sel = 1 if TODAY.day >= 25 else 0   # 월말에는 다음 달을 먼저 보여줌
+    grids = [g.replace(' hidden>', '>', 1) if i == sel else (g if ' hidden' in g[:40] else g.replace('<div class="cal" id="m%d"' % i, '<div class="cal" id="m%d" hidden' % i, 1)) for i, g in enumerate(grids)]
+    tabs = "".join(f'<button type="button" class="{"on" if i == sel else ""}" data-m="m{i}">{m.year}년 {m.month}월</button>' for i, m in enumerate(months))
+    # 날짜별 목록 (오늘 이후)
     blocks = []
-    for x in days:
-        lis = "".join(f'<li><span class="ek ek-{k.split()[0]}">{k}</span><a href="/danji/{h["id"]}/">{esc(h["name"])}</a><small>{esc(h["sido"])} · {esc(cat_label(h))}</small></li>'
-                      for k, h in sorted(ev[x], key=lambda e: ("특별공급", "청약 접수", "당첨 발표", "계약 시작").index(e[0])))
+    for x in sorted(k for k in ev if k >= TODAY - dt.timedelta(days=2)):
+        lis = "".join(f'<li><span class="ek ek-{k.split()[0]}">{k}</span><a href="/danji/{h["id"]}/">{esc(h["name"])}</a><small>{esc(h["sido"])} · {esc(cat_label(h))}</small></li>' for k, h in ev[x])
         tag = "오늘" if x == TODAY else ("내일" if x == TODAY + dt.timedelta(days=1) else "")
         blocks.append(f'<section class="cday{" today" if x == TODAY else ""}{" past" if x < TODAY else ""}" id="d{x.isoformat()}"><h3>{x.month}월 {x.day}일 ({"월화수목금토일"[x.weekday()]}){(" <em>" + tag + "</em>") if tag else ""}</h3><ul>{lis}</ul></section>')
-    body = (f'<header class="ph"><p class="cat">CALENDAR</p><h1>청약캘린더</h1><p class="lead">오늘부터 45일간의 특별공급·청약 접수·당첨 발표·계약 일정을 날짜별로 모았습니다. 단지명을 누르면 상세 정보를 볼 수 있습니다.</p></header>'
-            '<p class="legend"><span class="ek ek-특별공급">특별공급</span><span class="ek ek-청약">청약 접수</span><span class="ek ek-당첨">당첨 발표</span><span class="ek ek-계약">계약 시작</span></p>'
-            + "".join(blocks) + f'<p class="muted">데이터 기준일 {updated} · 출처 한국부동산원 청약홈</p>')
-    return page(ROOT, "/calendar/", "청약캘린더 · 이번 주 청약 일정", "오늘의 청약 접수, 특별공급, 당첨자 발표, 계약 일정을 한눈에. 전국 아파트·오피스텔·무순위 청약 일정을 매일 업데이트합니다.",
+    js = """<script>(function(){var tb=document.querySelectorAll('.mtabs button');tb.forEach(function(b){b.addEventListener('click',function(){tb.forEach(function(x){x.classList.toggle('on',x===b);document.getElementById(x.dataset.m).hidden=x!==b;});});});
+var on={};document.querySelectorAll('.legend button').forEach(function(b){on[b.dataset.k]=true;b.addEventListener('click',function(){on[b.dataset.k]=!on[b.dataset.k];b.classList.toggle('off',!on[b.dataset.k]);
+document.querySelectorAll('.ce').forEach(function(e){var k=e.className.match(/ce-(\\S+)/)[1];e.hidden=!on[k];});document.querySelectorAll('.cday li').forEach(function(li){var k=li.querySelector('.ek').className.match(/ek-(\\S+)/)[1];li.hidden=!on[k];});});});})();</script>"""
+    body = (f'<header class="ph"><p class="cat">CALENDAR</p><h1>청약캘린더</h1><p class="lead">이번 달과 다음 달의 특별공급·청약 접수·당첨 발표·계약 일정을 달력으로 확인하세요. 단지명을 누르면 상세 정보로 이동합니다.</p></header>'
+            f'<div class="calbar"><div class="mtabs">{tabs}</div><div class="legend"><button type="button" data-k="특별공급" class="ek ek-특별공급">특별공급</button><button type="button" data-k="청약" class="ek ek-청약">청약 접수</button><button type="button" data-k="당첨" class="ek ek-당첨">당첨 발표</button><button type="button" data-k="계약" class="ek ek-계약">계약 시작</button></div></div>'
+            + "".join(grids) + '<h2 class="clh">날짜별 일정</h2>' + ("".join(blocks) or '<p class="muted">예정된 일정이 없습니다.</p>') + f'<p class="muted">데이터 기준일 {updated} · 출처 한국부동산원 청약홈</p>' + js)
+    return page(ROOT, "/calendar/", "청약캘린더 · 이번 달 청약 일정", "이번 달과 다음 달의 청약 접수, 특별공급, 당첨자 발표, 계약 일정을 달력으로 한눈에. 전국 아파트·오피스텔·무순위 청약 일정을 매일 업데이트합니다.",
                 body, [("청약캘린더", "/calendar/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "청약캘린더", "url": SITE + "/calendar/"}], og_type="website", updated=updated)
 
 # ───────────────────────── 메인 자동 영역 ─────────────────────────
@@ -418,6 +446,9 @@ def inject_home(all_h, updated):
         "regions": "".join((f'<a href="/bunyang/{slug}/"><b>{nm}</b><span>{counts.get(nm, 0)}</span></a>' if os.path.exists(os.path.join(ROOT, "bunyang", slug))
                             else f'<a class="zero" href="/bunyang/"><b>{nm}</b><span>0</span></a>') for nm, slug in SIDO),
         "updated": updated,
+        "n_total": f'{len(all_h):,}',
+        "n_open": str(sum(1 for h in all_h if status(h)[0] == "접수중")),
+        "n_week": str(len(week)),
     }
     for k, v in blocks.items():
         s = re.sub(r"(<!--AUTO:%s-->).*?(<!--/AUTO:%s-->)" % (k, k), lambda m: m.group(1) + v + m.group(2), s, flags=re.S)
