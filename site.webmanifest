@@ -1,0 +1,13 @@
+{
+  "name": "VISIT ONE 비지트원",
+  "short_name": "VISIT ONE",
+  "description": "프리미엄 분양 홍보관 방문 예약",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0c0d",
+  "theme_color": "#0c0c0d",
+  "icons": [
+    {"src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
