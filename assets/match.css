@@ -1,0 +1,20 @@
+/* 맞춤 모달 (메인·목록 공통) */
+.mf-modal{position:fixed;inset:0;z-index:200;background:rgba(12,12,13,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.mf-box{position:relative;background:#fbf9f4;color:#0c0c0d;width:100%;max-width:620px;max-height:92vh;overflow:auto;padding:28px 26px 22px;font-family:"Noto Sans KR",sans-serif;word-break:keep-all}
+.mf-box h3{font-size:22px;margin:0 0 4px}
+.mf-sub{font-size:13px;color:#6d6a64;margin:0 0 8px}
+.mf-box h4{font-size:14px;margin:20px 0 8px}
+.mf-box h4 small{font-weight:400;color:#8e8a82;font-size:12px;margin-left:4px}
+.mf-x{position:absolute;right:14px;top:10px;border:0;background:none;font-size:28px;line-height:1;cursor:pointer;color:#6d6a64}
+.mf-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mf-chips button{font:inherit;font-size:13.5px;padding:8px 13px;border:1px solid #ddd5c4;background:#fff;cursor:pointer;color:#3c3a36}
+.mf-chips button.on{background:#0c0c0d;color:#fff;border-color:#0c0c0d}
+.mf-act{display:flex;gap:8px;margin-top:24px;position:sticky;bottom:-22px;background:#fbf9f4;padding:12px 0}
+.mf-act button{font:inherit;padding:14px 18px;border:1px solid #ddd5c4;background:#fff;cursor:pointer}
+.mf-act .mf-save{flex:1;background:#c2a46d;border-color:#c2a46d;color:#0c0c0d;font-weight:700}
+.fitbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#f6efe0;border:1px solid #e6d9bc;padding:12px 16px;margin-top:10px;font-size:13.5px}
+.fitbar .fb-sum{flex:1;min-width:200px}
+.fitbar .fb-sum b{color:var(--gold-d);margin-right:4px}
+.fitbar button{font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ink);background:#fff;cursor:pointer}
+.fitbar .fb-set{background:var(--ink);color:#fff}
+.fitbar .fb-toggle.on{background:var(--gold);border-color:var(--gold)}

@@ -1,0 +1,103 @@
+/* VISIT ONE 분양정보 포털 */
+main.wrap.pw{max-width:1080px}
+.st{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.01em;white-space:nowrap}
+.st-예정{background:#e9f1ff;color:#1d4fb8}
+.st-접수중{background:#c2a46d;color:#0c0c0d}
+.st-발표대기{background:#f3ecdc;color:#8a6d38}
+.st-계약예정,.st-계약중{background:#e8f4ec;color:#1f6b3a}
+.st-마감{background:#eeece7;color:#8b877f}
+.drs{list-style:none;padding:0;margin:18px 0 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.dr a{display:block;height:100%;background:#fff;border:1px solid var(--line);padding:18px 18px 16px;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+.dr a:hover{border-color:var(--gold);transform:translateY(-2px)}
+.dr-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.dr-top small{font-size:12px;color:var(--mute)}
+.dr b{display:block;font-size:17px;line-height:1.4;margin-bottom:4px}
+.dr p{margin:0 0 12px;font-size:13px;color:var(--mute)}
+.dr-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:#3c3a36;border-top:1px dashed var(--line);padding-top:10px}
+.dr-meta .pr{margin-left:auto;font-weight:700;color:var(--gold-d)}
+.flt{background:#fff;border:1px solid var(--line);padding:16px;margin:18px 0 6px;display:grid;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:var(--paper);cursor:pointer;color:#3c3a36}
+.chips button i{font-style:normal;color:var(--gold-d);font-size:11px;margin-left:2px}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chips button.on i{color:var(--gold-2)}
+.flt .search{margin:0}
+.cntline{font-size:13px;color:var(--mute);margin:14px 0 0}
+.cntline b{color:var(--ink);font-size:15px}
+/* 단지 상세 */
+.danji h2{margin-top:44px}
+.dh{background:var(--ink);color:#f5f1e8;padding:30px 28px;margin:10px 0 8px}
+.dh h1{color:#fff;margin:12px 0 10px}
+.dh .lead{color:#d8d2c4}
+.dh-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dh-tags .cat{font-size:12px;border:1px solid rgba(255,255,255,.25);padding:2px 9px;border-radius:999px;color:#e8e2d4;margin:0;letter-spacing:0}
+.fl{font-size:12px;padding:2px 9px;border-radius:999px;background:rgba(194,164,109,.18);color:var(--gold-2)}
+.kf{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.12);margin:22px 0}
+.kf div{background:var(--ink);padding:14px 12px}
+.kf small{display:block;font-size:12px;color:#a9a397;margin-bottom:4px}
+.kf b{font-size:16px;color:#fff;word-break:keep-all}
+.dh-cta{display:flex;flex-wrap:wrap;gap:8px}
+.lb{display:inline-block;padding:11px 18px;font-size:14px;font-weight:700;text-decoration:none;background:#fff;color:var(--ink)}
+.lb.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.lb.gold{background:var(--gold);color:var(--ink)}
+.tline{list-style:none;padding:0;margin:16px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));border-top:2px solid var(--line)}
+.tline li{position:relative;padding:16px 8px 0;font-size:13px}
+.tline li::before{content:"";position:absolute;top:-7px;left:8px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.tline li.done::before{background:var(--gold);border-color:var(--gold)}
+.tline li.now::before{background:var(--ink);border-color:var(--ink);box-shadow:0 0 0 4px rgba(194,164,109,.35)}
+.tline b{display:block;font-size:13px}
+.tline span{color:var(--mute)}
+.tw{overflow-x:auto}
+.dt td small{display:block;font-size:11.5px;color:var(--mute)}
+.dt td.pr{font-weight:700;color:var(--gold-d);white-space:nowrap}
+.consult{background:#fff;border:1px solid var(--gold);padding:24px;margin:44px 0}
+.consult h2{margin-top:0}
+.src{margin-top:32px}
+/* 캘린더 */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+.ek{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap}
+.ek-특별공급{background:#efe6f8;color:#5a2d8c}
+.ek-청약{background:#c2a46d;color:#0c0c0d}
+.ek-당첨{background:#e9f1ff;color:#1d4fb8}
+.ek-계약{background:#e8f4ec;color:#1f6b3a}
+.cday{background:#fff;border:1px solid var(--line);margin:12px 0;padding:14px 18px}
+.cday.today{border:2px solid var(--gold)}
+.cday.past{opacity:.6}
+.cday h3{margin:0 0 8px;font-size:15px}
+.cday h3 em{font-style:normal;font-size:12px;background:var(--ink);color:#fff;padding:2px 8px;margin-left:6px}
+.cday ul{list-style:none;margin:0;padding:0}
+.cday li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 0;border-top:1px dashed var(--line);font-size:14px}
+.cday li:first-child{border-top:0}
+.cday li a{font-weight:700;color:var(--ink);text-decoration:none}
+.cday li small{color:var(--mute);font-size:12px}
+@media(max-width:720px){
+  .drs{grid-template-columns:1fr}
+  .kf{grid-template-columns:repeat(2,1fr)}
+  .dh{padding:22px 18px;margin-left:-4px;margin-right:-4px}
+  .consult{padding:18px}
+  .tline{grid-template-columns:repeat(3,1fr);row-gap:14px}
+}
+/* 모바일 메뉴: 가로 스크롤 */
+@media(max-width:860px){
+  .hd .wrap{flex-wrap:wrap}
+  .hd nav{order:3;width:100%;display:flex!important;overflow-x:auto;gap:16px;padding:8px 0 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .hd nav::-webkit-scrollbar{display:none}
+  .hd nav a{white-space:nowrap;font-size:13.5px}
+}
+.tbl.sched th{width:30%}
+/* 분양가 분석 */
+.pa{display:grid;grid-template-columns:220px 1fr;gap:0;border:1px solid var(--line);background:#fff}
+.pa-n{background:var(--ink);color:#fff;padding:22px;display:flex;flex-direction:column;justify-content:center}
+.pa-n small{color:#a9a397;font-size:12.5px}
+.pa-n b{font-size:34px;color:var(--gold-2);font-weight:700;line-height:1.2}
+.pa-n em{font-style:normal;font-size:14px;color:#fff;margin-left:4px;font-weight:400}
+.pa-c{padding:18px 22px}
+.pa-say{margin:0 0 12px;font-size:15px}
+.pa-say b{color:var(--gold-d)}
+.bars div{display:grid;grid-template-columns:90px 1fr 80px;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+.bars i{display:block;height:12px;background:var(--gold)}
+.bars i.g{background:#cfc8b8}
+.bars b{text-align:right}
+.dt.sp td,.dt.sp th{text-align:center;white-space:nowrap}
+.danji .faq{margin-top:10px}
+@media(max-width:720px){.pa{grid-template-columns:1fr}.bars div{grid-template-columns:70px 1fr 66px}}
