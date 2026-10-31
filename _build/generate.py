@@ -30,12 +30,19 @@ REGION_PPY = {}
 CATNAME = {"A": "아파트", "O": "오피스텔·도시형", "R": "무순위·잔여세대", "P": "공공지원 민간임대", "T": "임의공급"}
 
 # ───────────────────────── 데이터 수집 ─────────────────────────
-def api(endpoint, params):
+CMP = "https://api.odcloud.kr/api/ApplyhomeInfoCmpetRtSvc/v1/"
+CACHE_PATH = os.path.join(ROOT, "data", "cache.json")
+try:
+    CACHE = json.load(open(CACHE_PATH, encoding="utf-8"))
+except Exception:
+    CACHE = {}
+
+def api(endpoint, params, base=BASE):
     key = os.environ["APPLYHOME_KEY"]
     q = urllib.parse.urlencode({**params, "serviceKey": key})
     for attempt in range(4):
         try:
-            with urllib.request.urlopen(BASE + endpoint + "?" + q, timeout=40) as r:
+            with urllib.request.urlopen(base + endpoint + "?" + q, timeout=40) as r:
                 return json.loads(r.read().decode("utf-8"))
         except Exception as e:
             print("retry", endpoint, e); time.sleep(2 + attempt * 3)
@@ -52,9 +59,18 @@ def fetch_all(endpoint, since):
         page_no += 1
     return rows
 
+def by_house(endpoint, house_id, base=BASE, reuse=True):
+    """단지별 조회 + 캐시. reuse=True 이고 캐시가 있으면 API를 다시 부르지 않음(확정된 데이터)."""
+    k = endpoint + ":" + str(house_id)
+    if reuse and k in CACHE: return CACHE[k]
+    r = api(endpoint, {"page": 1, "perPage": 500, "cond[HOUSE_MANAGE_NO::EQ]": house_id}, base)
+    data = r.get("data") or []
+    CACHE[k] = data
+    time.sleep(0.03)
+    return data
+
 def fetch_models(endpoint, house_id):
-    r = api(endpoint, {"page": 1, "perPage": 200, "cond[HOUSE_MANAGE_NO::EQ]": house_id})
-    return r.get("data") or []
+    return by_house(endpoint, house_id)
 
 def pick(h, *keys):
     for k in keys:
@@ -108,9 +124,30 @@ def load_live():
         rows = fetch_all(det, since)
         print(cat, len(rows), "rows")
         for h in rows:
-            out.append(norm(cat, h, fetch_models(mdl, h.get("HOUSE_MANAGE_NO"))))
-            time.sleep(0.05)
+            n = norm(cat, h, fetch_models(mdl, h.get("HOUSE_MANAGE_NO")))
+            add_competition(n)
+            out.append(n)
+    json.dump(CACHE, open(CACHE_PATH, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     return out
+
+CMP_EP = {"A": "getAPTLttotPblancCmpet", "O": "getUrbtyOfctlLttotPblancCmpet", "R": "getRemndrLttotPblancCmpet",
+          "P": "getPblPvtRentLttotPblancCmpet", "T": "getOPTLttotPblancCmpet"}
+
+def add_competition(h):
+    """접수가 시작된 단지만 경쟁률·당첨가점·특공 신청현황 수집. 계약까지 지난 단지는 캐시 재사용."""
+    start = d(h["sp_b"]) or d(h["r_b"])
+    if not start or start > TODAY: return
+    end = d(h["c_b"]) or d(h["win"]) or start
+    final = end < TODAY - dt.timedelta(days=3)
+    hid = h["id"]
+    rows = by_house(CMP_EP[h["cat"]], hid, CMP, reuse=final)
+    if h["cat"] == "R" and not rows:
+        rows = by_house("getCancResplLttotPblancCmpet", hid, CMP, reuse=final)
+    h["cmp_raw"] = rows
+    if h["cat"] == "A":
+        h["score_raw"] = by_house("getAptLttotPblancScore", hid, CMP, reuse=final)
+        h["spreq_raw"] = by_house("getAPTSpsplyReqstStus", hid, CMP, reuse=final)
+    build_competition(h)
 
 def load_sample(path):
     out = []
@@ -134,6 +171,65 @@ def load_sample(path):
                         cap=cap == "Y", spec=spec == "Y", adj=adj == "Y", home=("https://" + home) if home and not home.startswith("http") else home,
                         url=url, types=types))
     return out
+
+# ───────────────────────── 경쟁률 가공
+def ty_label(ty):
+    ty = (ty or "").strip()
+    if re.match(r"^\d{2,3}\.\d+", ty):
+        return f"{int(float(re.sub(r'[^0-9.]', '', ty[:8])))}{re.sub(r'[0-9. ]', '', ty)}"
+    return ty
+
+def rate_num(t):
+    try: return float(str(t).replace(",", ""))
+    except Exception: return None
+
+SPREQ = [("신혼부부", "NWWDS_NMTW"), ("생애최초", "LFE_FRST"), ("다자녀", "MNYCH"), ("신생아", "NWBB_NWBBSHR"), ("청년", "YGMN"), ("노부모부양", "OPS")]
+SPHS = {"신혼부부": "NWWDS_NMTW_HSHLDCO", "생애최초": "LFE_FRST_HSHLDCO", "다자녀": "MNYCH_HSHLDCO", "신생아": "NWBB_NWBBSHR_HSHLDCO", "청년": "YGMN_HSHLDCO", "노부모부양": "OLD_PARNTS_SUPORT_HSHLDCO"}
+
+def build_competition(h):
+    rows = h.get("cmp_raw") or []
+    out = []
+    if h["cat"] == "A":
+        g = {}
+        for r in rows: g.setdefault(r.get("HOUSE_TY", "").strip(), []).append(r)
+        for ty, rs in g.items():
+            rs.sort(key=lambda r: (to_i(r.get("SUBSCRPT_RANK_CODE")), str(r.get("RESIDE_SECD"))))
+            sup = to_i(rs[0].get("SUPLY_HSHLDCO"))
+            r1 = sum(to_i(r.get("REQ_CNT")) for r in rs if to_i(r.get("SUBSCRPT_RANK_CODE")) == 1)
+            tot = sum(to_i(r.get("REQ_CNT")) for r in rs)
+            res = ""
+            for r in rs:
+                if rate_num(r.get("CMPET_RATE")) is not None:
+                    res = f'{to_i(r.get("SUBSCRPT_RANK_CODE"))}순위 {r.get("RESIDE_SENM", "")} 마감'; break
+            if not res:
+                tri = [re.sub(r"\D", "", str(r.get("CMPET_RATE"))) for r in rs if "△" in str(r.get("CMPET_RATE"))]
+                res = f"미달 {tri[-1]}세대" if tri else ("접수중" if tot == 0 else "")
+            sc = {}
+            for r in h.get("score_raw") or []:
+                if r.get("HOUSE_TY", "").strip() == ty and r.get("TOP_SCORE") not in ("-", None, ""):
+                    sc[r.get("RESIDE_SENM", "")] = (r.get("LWET_SCORE"), r.get("AVRG_SCORE"), r.get("TOP_SCORE"))
+            out.append(dict(label=ty_label(ty), sup=sup, r1=r1, tot=tot, rate=(r1 / sup) if sup else 0, res=res, score=sc))
+    else:
+        g = {}
+        for r in rows:
+            k = r.get("HOUSE_TY", "").strip()
+            x = g.setdefault(k, dict(sup=0, tot=0, txt=""))
+            x["sup"] += to_i(r.get("SUPLY_HSHLDCO") or r.get("SPSPLY_KND_HSHLDCO")); x["tot"] += to_i(r.get("REQ_CNT"))
+            x["txt"] = x["txt"] or str(r.get("CMPET_RATE") or "")
+        for ty, x in g.items():
+            rate = x["tot"] / x["sup"] if x["sup"] else 0
+            res = "미달" if x["tot"] < x["sup"] else "마감"
+            out.append(dict(label=ty_label(ty), sup=x["sup"], r1=x["tot"], tot=x["tot"], rate=rate, res=res, score={}))
+    h["cmp"] = out
+    sp = {}
+    for r in h.get("spreq_raw") or []:
+        ty = ty_label(r.get("HOUSE_TY"))
+        sp[ty] = {nm: (to_i(r.get(SPHS[nm])), sum(to_i(r.get(f"{p}_{key}_CNT")) for p in ("CRSPAREA", "CTPRVN", "ETC_AREA")))
+                  for nm, key in SPREQ}
+    h["spreq"] = sp
+    tot_sup = sum(c["sup"] for c in out); tot_r1 = sum(c["r1"] for c in out)
+    h["rate_all"] = round(tot_r1 / tot_sup, 2) if tot_sup and tot_r1 else 0
+    h.pop("cmp_raw", None); h.pop("score_raw", None); h.pop("spreq_raw", None)
 
 # ───────────────────────── 계산 도우미 ─────────────────────────
 def d(s):
@@ -214,6 +310,9 @@ def faq(h):
     if h["types"]:
         ts = ", ".join(f'{t["label"]}(전용 {t["excl"]:.0f}㎡)' for t in h["types"][:8])
         q.append((f"{nm}에는 어떤 타입이 있나요?", f"{ts} 등 {len(h['types'])}개 타입, 총 {h['units']:,}세대가 공급됩니다."))
+    if h.get("rate_all"):
+        best = max(h["cmp"], key=lambda c: c["rate"])
+        q.append((f"{nm} 청약 경쟁률은 어땠나요?", f'{"1순위 " if h["cat"] == "A" else ""}평균 경쟁률은 {cr_txt(h["rate_all"])}이며, 가장 높은 타입은 {best["label"]}({cr_txt(best["rate"])})입니다.'))
     spt = sp_total(h)
     if spt:
         q.append((f"{nm} 특별공급은 몇 세대인가요?", " · ".join(f"{k} {v}세대" for k, v in spt.items()) + "입니다. 유형별 자격 요건은 공고문을 확인하세요."))
@@ -239,6 +338,7 @@ def row(h):
             f'<a href="/danji/{h["id"]}/"><div class="dr-top">{badge(h)}<small>{esc(cat_label(h))} · {esc(h["sido"])}</small></div>'
             f'<b>{esc(h["name"])}</b><p>{esc(short_addr(h["addr"]))} · {h["units"]:,}세대</p>'
             f'<div class="dr-meta"><span>접수 {kdate(h["sp_b"] or h["r_b"])}</span><span>발표 {kdate(h["win"])}</span>'
+            + (f'<span class="crt">경쟁률 {cr_txt(h["rate_all"])}</span>' if h.get("rate_all") else "")
             + (f'<span class="pr">{esc(price_range(h))}</span>' if price_range(h) else "") + '</div></a></li>')
 
 def consult_form(h):
@@ -273,12 +373,39 @@ def price_box(h):
                f'<p class="muted">※ 최근 {WINDOW_DAYS}일 공고 기준 {esc(h["sido"])} 아파트 {avg[1]}개 단지의 평균, 타입별 최고가·공급면적 기준 단순 계산값입니다.</p>')
     return f'<h2>분양가 분석</h2><div class="pa"><div class="pa-n"><small>3.3㎡(평)당 분양가</small><b>{pp:,}<em>만 원</em></b></div><div class="pa-c">{cmp or "<p class=muted>비교할 같은 지역 단지가 아직 충분하지 않습니다.</p>"}</div></div>'
 
+def cr_txt(r):
+    return f"{r:,.2f}:1" if r >= 0.01 else "-"
+
+def cmp_box(h):
+    cs = h.get("cmp") or []
+    if not cs: return ""
+    if h["cat"] == "A":
+        has_sc = any(c["score"] for c in cs)
+        head = "<th>타입</th><th>일반공급</th><th>1순위 접수</th><th>1순위 경쟁률</th><th>결과</th>" + ("<th>당첨가점<br><small>해당지역 최저·평균·최고</small></th>" if has_sc else "")
+        trs = ""
+        for c in cs:
+            sc = c["score"].get("해당지역") or next(iter(c["score"].values()), None)
+            trs += (f'<tr><td><b>{esc(c["label"])}</b></td><td>{c["sup"]:,}</td><td>{c["r1"]:,}</td><td class="pr">{cr_txt(c["rate"])}</td>'
+                    f'<td><span class="rs{" rs-x" if c["res"].startswith("미달") else ""}">{esc(c["res"])}</span></td>'
+                    + (f'<td>{esc(sc[0])} · {esc(sc[1])} · <b>{esc(sc[2])}</b></td>' if has_sc and sc else ("<td>-</td>" if has_sc else "")) + "</tr>")
+    else:
+        head = "<th>타입</th><th>공급</th><th>접수</th><th>경쟁률</th><th>결과</th>"
+        trs = "".join(f'<tr><td><b>{esc(c["label"])}</b></td><td>{c["sup"]:,}</td><td>{c["tot"]:,}</td><td class="pr">{cr_txt(c["rate"])}</td><td><span class="rs{" rs-x" if c["res"].startswith("미달") else ""}">{esc(c["res"])}</span></td></tr>' for c in cs)
+    avg = f'<p class="cr-sum">전체 평균 {"1순위 " if h["cat"] == "A" else ""}경쟁률 <b>{cr_txt(h["rate_all"])}</b></p>' if h.get("rate_all") else ""
+    return f'<h2>청약 경쟁률</h2>{avg}<div class="tw"><table class="tbl dt cr"><thead><tr>{head}</tr></thead><tbody>{trs}</tbody></table></div><p class="muted">※ 청약홈 접수 결과 기준이며, 은행 전산 사정에 따라 최종 결과와 일부 다를 수 있습니다.</p>'
+
 def sp_box(h):
     rows = [t for t in h["types"] if t.get("sp")]
     if not rows: return ""
     keys = [k for k, _ in SPKEYS if any(k in t["sp"] for t in rows)]
     head = "".join(f"<th>{k}</th>" for k in keys)
-    trs = "".join(f'<tr><td><b>{esc(t["label"])}</b></td>' + "".join(f'<td>{t["sp"].get(k, 0) or "-"}</td>' for k in keys) + f'<td><b>{t.get("sps", 0)}</b></td><td>{t.get("gen", 0)}</td></tr>' for t in h["types"])
+    req = h.get("spreq") or {}
+    def cell(t, k):
+        n = t["sp"].get(k, 0)
+        r = (req.get(t["label"]) or {}).get(k)
+        if not n: return "<td>-</td>"
+        return f'<td>{n}' + (f'<small class="rq">신청 {r[1]:,}</small>' if r else "") + "</td>"
+    trs = "".join(f'<tr><td><b>{esc(t["label"])}</b></td>' + "".join(cell(t, k) for k in keys) + f'<td><b>{t.get("sps", 0)}</b></td><td>{t.get("gen", 0)}</td></tr>' for t in h["types"])
     return f'<h2>특별공급 유형별 세대수</h2><div class="tw"><table class="tbl dt sp"><thead><tr><th>타입</th>{head}<th>특공 계</th><th>일반공급</th></tr></thead><tbody>{trs}</tbody></table></div>'
 
 def danji_page(h, all_h, updated):
@@ -306,7 +433,7 @@ def danji_page(h, all_h, updated):
     pr = price_range(h)
     lead = f'{esc(h["addr"])}에 공급되는 {h["units"]:,}세대 규모의 {esc(cat_label(h))}입니다.' + (f' 타입별 최고 분양가는 {esc(pr)} 수준입니다.' if pr else "")
     body = f"""<article class="danji">
-<div class="dh"><div class="dh-tags">{badge(h)}<span class="cat">{esc(cat_label(h))}</span><span class="cat">{esc(h["sido"])}</span>{flags}</div>
+<div class="dh"><div class="dh-tags">{badge(h)}<span class="cat">{esc(cat_label(h))}</span><span class="cat">{esc(h["sido"])}</span>{flags}{(f'<span class="fl crt">경쟁률 {cr_txt(h["rate_all"])}</span>') if h.get("rate_all") else ""}</div>
 <h1>{esc(h["name"])}</h1><p class="lead">{lead}</p>
 <div class="kf"><div><small>공급 세대</small><b>{h["units"]:,}세대</b></div><div><small>청약 접수</small><b>{kdate(h["sp_b"] or h["r_b"])}</b></div><div><small>당첨 발표</small><b>{kdate(h["win"])}</b></div><div><small>분양가</small><b>{esc(pr) if pr else "공고 확인"}</b></div></div>
 <div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">상담 신청</a></div></div>
@@ -319,6 +446,7 @@ def danji_page(h, all_h, updated):
 <tr><th>계약</th><td>{esc(h["c_b"])}{(" ~ " + esc(h["c_e"])) if h["c_e"] and h["c_e"] != h["c_b"] else ""}</td></tr>
 </tbody></table>
 <h2>타입별 공급 정보</h2>{ttable}
+{cmp_box(h)}
 {price_box(h)}{sp_box(h)}
 <h2>단지 정보</h2><table class="tbl"><tbody>{info_html}</tbody></table>
 {consult_form(h)}
@@ -343,10 +471,10 @@ def list_page(path, title, desc, intro, items, crumbs, updated, filters=True):
         chips = ('<div class="flt"><div class="chips" id="fs"><button type="button" class="on" data-v="">전체 지역</button>'
                  + "".join(f'<button type="button" data-v="{esc(s)}">{esc(s)} <i>{sido_counts[s]}</i></button>' for s, _ in SIDO if s in sido_counts) + '</div>'
                  '<div class="chips" id="fc"><button type="button" class="on" data-v="">전체 유형</button><button type="button" data-v="A">아파트</button><button type="button" data-v="O">오피스텔·도시형</button><button type="button" data-v="R">무순위·잔여</button><button type="button" data-v="P">공공지원 민간임대</button></div>'
-                 '<div class="chips" id="ft"><button type="button" class="on" data-v="">전체 상태</button><button type="button" data-v="예정">접수 예정</button><button type="button" data-v="접수중">접수중</button><button type="button" data-v="발표대기">발표 대기</button><button type="button" data-v="계약중">계약중</button></div>'
+                 '<div class="chips" id="ft"><button type="button" class="on" data-v="">진행중 전체</button><button type="button" data-v="예정">접수 예정</button><button type="button" data-v="접수중">접수중</button><button type="button" data-v="발표대기">발표 대기</button><button type="button" data-v="계약예정">계약 예정</button><button type="button" data-v="계약중">계약중</button><button type="button" data-v="마감">마감된 단지</button></div>'
                  '<label class="search"><span>단지 검색</span><input id="fq" type="search" placeholder="단지명·지역 입력"></label></div>')
     js = """<script>(function(){var st={s:'',c:'',t:'',q:''};var q0=new URLSearchParams(location.search).get('q');var qi=document.getElementById('fq');if(q0&&qi){qi.value=q0;st.q=q0;}
-function ap(){var n=0;document.querySelectorAll('.drs .dr').forEach(function(li){var ok=!li.classList.contains('nf')&&(!st.s||li.dataset.s===st.s)&&(!st.c||li.dataset.c===st.c)&&(!st.t||li.dataset.st===st.t)&&(!st.q||li.dataset.k.toLowerCase().indexOf(st.q.toLowerCase())>-1);li.hidden=!ok;if(ok)n++;});var c=document.getElementById('cnt');if(c)c.textContent=n;}
+function ap(){var n=0;document.querySelectorAll('.drs .dr').forEach(function(li){var ok=!li.classList.contains('nf')&&(!st.s||li.dataset.s===st.s)&&(!st.c||li.dataset.c===st.c)&&(st.t?li.dataset.st===st.t:li.dataset.st!=='마감')&&(!st.q||li.dataset.k.toLowerCase().indexOf(st.q.toLowerCase())>-1);li.hidden=!ok;if(ok)n++;});var c=document.getElementById('cnt');if(c)c.textContent=n;}
 [['fs','s'],['fc','c'],['ft','t']].forEach(function(p){var g=document.getElementById(p[0]);if(!g)return;g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});st[p[1]]=b.dataset.v;ap();});});
 if(qi)qi.addEventListener('input',function(){st.q=qi.value.trim();ap();});window.addEventListener('vo-filter',ap);ap();})();</script><script src="/assets/match.js" defer></script>""" if filters else ""
     body = (f'<header class="ph"><p class="cat">BUNYANG</p><h1>{esc(title)}</h1><p class="lead">{intro}</p></header>{chips}' +
@@ -423,6 +551,12 @@ def today_html(all_h, kinds, empty_word):
     head = "" if x == TODAY else f'<li class="nx">오늘은 {empty_word} 일정이 없어요 · 다음 일정 <b>{x.month}.{x.day}({"월화수목금토일"[x.weekday()]})</b></li>'
     return head + "".join(ev_li(k, h) for k, h in ev[x][:9])
 
+def hot_html(all_h):
+    xs = sorted([h for h in all_h if h.get("rate_all") and d(h["notice"]) and d(h["notice"]) >= TODAY - dt.timedelta(days=90) and h["cat"] in ("A", "O")],
+                key=lambda h: h["rate_all"], reverse=True)[:10]
+    if not xs: return '<li class="empty">최근 청약 결과가 아직 없습니다.</li>'
+    return "".join(f'<li><span class="hn">{i + 1}</span><a href="/danji/{h["id"]}/">{esc(h["name"])}</a><small>{esc(h["sido"])} · {esc(cat_label(h))}</small><b>{cr_txt(h["rate_all"])}</b></li>' for i, h in enumerate(xs))
+
 def inject_home(all_h, updated):
     p = os.path.join(ROOT, "index.html")
     s = open(p, encoding="utf-8").read()
@@ -445,6 +579,7 @@ def inject_home(all_h, updated):
         "remain": "".join(mini_card(h) for h in remain) or '<li class="empty">현재 접수 예정인 무순위·잔여세대가 없습니다.</li>',
         "regions": "".join((f'<a href="/bunyang/{slug}/"><b>{nm}</b><span>{counts.get(nm, 0)}</span></a>' if os.path.exists(os.path.join(ROOT, "bunyang", slug))
                             else f'<a class="zero" href="/bunyang/"><b>{nm}</b><span>0</span></a>') for nm, slug in SIDO),
+        "hot": hot_html(all_h),
         "updated": updated,
         "n_total": f'{len(all_h):,}',
         "n_open": str(sum(1 for h in all_h if status(h)[0] == "접수중")),
@@ -463,7 +598,7 @@ def export_json(all_h, updated):
         rows.append({"id": h["id"], "n": h["name"], "s": h["sido"], "c": h["cat"], "cl": cat_label(h), "st": status(h)[0], "stt": status(h)[1],
                      "a": short_addr(h["addr"]), "u": h["units"], "rb": h["sp_b"] or h["r_b"], "w": h["win"],
                      "pn": min(ps) if ps else 0, "px": max(ps) if ps else 0, "ex": sorted({int(t["excl"]) for t in h["types"] if t["excl"]}),
-                     "sp": sp_total(h), "pp": ppy_of(h)})
+                     "sp": sp_total(h), "pp": ppy_of(h), "cr": h.get("rate_all", 0)})
     json.dump({"updated": updated, "items": rows}, open(os.path.join(ROOT, "data", "danji.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 
 # ───────────────────────── 사이트맵 ─────────────────────────

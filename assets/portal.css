@@ -144,3 +144,11 @@ main.wrap.pw{max-width:1080px}
 }
 @media(max-width:860px){.hd .wrap{height:auto;min-height:58px;padding-top:10px;padding-bottom:2px;row-gap:2px}}
 @media(max-width:720px){.cm{display:none}}
+/* 경쟁률 */
+.crt{font-weight:700;color:#1d4fb8}
+.dh .fl.crt{background:rgba(120,160,255,.18);color:#bcd0ff}
+.cr-sum{font-size:15px;margin:6px 0 10px}.cr-sum b{color:var(--gold-d);font-size:18px}
+.dt.cr td,.dt.cr th{white-space:nowrap}
+.rs{font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;background:#e8f4ec;color:#1f6b3a}
+.rs.rs-x{background:#fbecea;color:#b0392b}
+.dt td small.rq{display:block;font-size:11px;color:#1d4fb8}
