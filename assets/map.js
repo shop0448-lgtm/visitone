@@ -30,7 +30,7 @@
       (d.pn ? '<div><dt>분양가</dt><dd>' + won(d.pn) + (d.px !== d.pn ? " ~ " + won(d.px) : "") + "</dd></div>" : "") +
       (d.cr ? '<div><dt>경쟁률</dt><dd class="crt">' + d.cr.toFixed(2) + ":1</dd></div>" : "") + "</dl>" +
       (d.g === "area" ? '<p class="mnote">※ 정확한 지번이 없어 동·구 단위 위치로 표시했습니다.</p>' : "") +
-      '<div class="ma"><a href="/danji/' + d.id + '/">상세 보기</a><a class="g" href="/danji/' + d.id + '/#consult">상담 신청</a></div>';
+      '<div class="ma"><a href="/danji/' + d.id + '/">상세 보기</a><a class="g" href="/danji/' + d.id + '/#consult">' + (d.st === "마감" ? "새 분양 알림" : "청약 알림 받기") + '</a></div>';
     el.hidden = false;
     el.querySelector(".mx").onclick = function () { el.hidden = true; };
   }

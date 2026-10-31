@@ -342,20 +342,32 @@ def row(h):
             + (f'<span class="pr">{esc(price_range(h))}</span>' if price_range(h) else "") + '</div></a></li>')
 
 def consult_form(h):
-    return f"""<section class="consult" id="consult"><h2>이 단지 상담 신청</h2>
-<p>청약 자격, 자금 계획, 비슷한 조건의 VISIT ONE 추천 현장까지 상담사가 연락드려 안내해 드립니다.</p>
+    """청약 알림 신청 (VISIT ONE은 해당 단지의 분양 대행사가 아니므로 상담·예약 대신 일정 알림만 받음)"""
+    closed = status(h)[0] == "마감"
+    title = "비슷한 새 분양 알림 받기" if closed else "이 단지 청약 알림 받기"
+    lead = ("이 단지는 청약이 끝났습니다. 같은 지역·비슷한 조건의 새 분양 공고가 나오면 알려드립니다." if closed else
+            "접수 시작 전날과 당첨 발표일에 잊지 않도록 문자로 알려드립니다. 같은 지역 새 공고 알림도 함께 받을 수 있습니다.")
+    opts = ([("새공고", "같은 지역 새 분양 공고", True)] if closed else
+            [("접수전날", "청약 접수 전날 알림", True), ("발표일", "당첨 발표일 알림", True), ("새공고", "같은 지역 새 분양 공고", False)])
+    chk = "".join(f'<label class="pchk"><input type="checkbox" name="al" value="{v}"{" checked" if on else ""}> {t}</label>' for v, t, on in opts)
+    nm = esc(h["name"]).replace("'", "")
+    return f"""<section class="consult" id="consult"><h2>{title}</h2>
+<p>{lead}</p>
 <form class="pform" id="cform" novalidate><div class="pgrid">
 <label>성함 *<input id="c_name" autocomplete="name"></label>
-<label>연락처 *<input id="c_phone" type="tel" inputmode="numeric" placeholder="010-0000-0000"></label></div>
-<label>문의 내용<textarea id="c_memo" rows="3" placeholder="관심 타입, 궁금한 점 등을 남겨 주세요."></textarea></label>
-<label class="pagree"><input type="checkbox" id="c_agree"> [필수] 분양 상담 안내를 위한 개인정보(성함, 연락처) 수집·이용에 동의합니다. 보유 기간: 상담 완료 후 1년. <a href="/privacy/">처리방침</a></label>
-<p class="perr" id="c_err" hidden>성함, 연락처를 입력하고 동의에 체크해 주세요.</p>
-<button type="submit" class="pbtn">상담 신청하기</button><p class="pok" id="c_ok" hidden>신청이 접수되었습니다. 확인 후 연락드리겠습니다.</p></form>
+<label>휴대폰 번호 *<input id="c_phone" type="tel" inputmode="numeric" placeholder="010-0000-0000"></label></div>
+<div class="pchks">{chk}</div>
+<label class="pagree"><input type="checkbox" id="c_agree"> [필수] 청약 일정 알림 발송을 위한 개인정보(성함, 휴대폰 번호, 관심 단지) 수집·이용에 동의합니다. 보유 기간: 알림 종료 후 1년 또는 삭제 요청 시까지. <a href="/privacy/">처리방침</a></label>
+<label class="pagree"><input type="checkbox" id="c_mkt"> [선택] 관심 조건과 비슷한 VISIT ONE 제휴 현장 안내를 문자·전화로 받겠습니다.</label>
+<p class="perr" id="c_err" hidden>성함과 휴대폰 번호를 입력하고 필수 동의에 체크해 주세요.</p>
+<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 문자로 알려드리겠습니다.</p>
+<p class="pnote">VISIT ONE은 이 단지의 분양 사업 주체나 대행사가 아니며, 청약 신청과 공식 문의는 청약홈과 사업 주체를 통해 진행됩니다.</p></form>
 <script>(function(){{var f=document.getElementById('cform'),v=function(i){{return document.getElementById(i).value.trim();}};
 document.getElementById('c_phone').addEventListener('input',function(e){{var x=e.target.value.replace(/[^0-9]/g,'').slice(0,11);if(x.length>7)x=x.replace(/(\\d{{3}})(\\d{{3,4}})(\\d{{4}})/,'$1-$2-$3');else if(x.length>3)x=x.slice(0,3)+'-'+x.slice(3);e.target.value=x;}});
-f.addEventListener('submit',function(e){{e.preventDefault();var ok=v('c_name')&&/^0\\d{{1,2}}-?\\d{{3,4}}-?\\d{{4}}$/.test(v('c_phone'))&&document.getElementById('c_agree').checked;
-document.getElementById('c_err').hidden=ok;if(!ok)return;var b=new URLSearchParams();
-b.append('{GFE["site"]}','[단지문의] {esc(h["name"]).replace("'", "")}');b.append('{GFE["date"]}','단지문의');b.append('{GFE["name"]}',v('c_name'));b.append('{GFE["phone"]}',v('c_phone'));b.append('{GFE["kind"]}','{h["id"]}');b.append('{GFE["memo"]}',v('c_memo'));
+f.addEventListener('submit',function(e){{e.preventDefault();var ok=v('c_name')&&/^01\\d-?\\d{{3,4}}-?\\d{{4}}$/.test(v('c_phone'))&&document.getElementById('c_agree').checked;
+document.getElementById('c_err').hidden=ok;if(!ok)return;var al=[].map.call(f.querySelectorAll('input[name=al]:checked'),function(x){{return x.value;}}).join(',');
+var b=new URLSearchParams();b.append('{GFE["site"]}','[청약알림] {nm}');b.append('{GFE["date"]}','{esc(h["sp_b"] or h["r_b"] or "")}');b.append('{GFE["name"]}',v('c_name'));b.append('{GFE["phone"]}',v('c_phone'));
+b.append('{GFE["kind"]}','{h["id"]} · {esc(h["sido"])}');b.append('{GFE["memo"]}','알림: '+(al||'-')+' / 발표 {esc(h["win"] or "-")} / 제휴현장 안내 동의: '+(document.getElementById('c_mkt').checked?'Y':'N'));
 fetch('{GF}',{{method:'POST',mode:'no-cors',body:b}}).then(function(){{f.querySelector('.pbtn').disabled=true;document.getElementById('c_ok').hidden=false;}}).catch(function(){{document.getElementById('c_err').textContent='전송에 실패했습니다. 잠시 후 다시 시도해 주세요.';document.getElementById('c_err').hidden=false;}});}});}})();</script></section>"""
 
 def price_box(h):
@@ -421,11 +433,10 @@ def danji_page(h, all_h, updated):
         ttable = '<p class="muted">타입별 공급 정보는 청약홈 입주자모집공고에서 확인하실 수 있습니다.</p>'
     info = [("공급 위치", h["addr"]), ("공급 규모", f'{h["units"]:,}세대'), ("주택 구분", cat_label(h) + (f' ({h["dtl"]})' if h["cat"] == "A" and h["dtl"] else "")),
             ("시공사", h["cnst"]), ("시행사", h["bsns"]), ("입주 예정", f'{h["move"][:4]}년 {int(h["move"][4:6])}월' if len(h["move"]) >= 6 else h["move"]),
-            ("문의", tel_fmt(h["tel"]))]
+            ]
     info_html = "".join(f"<tr><th>{k}</th><td>{esc(v)}" + (f' <a class="onmap" href="/map/?id={h["id"]}">지도에서 보기 →</a>' if k == "공급 위치" else "") + "</td></tr>" for k, v in info if v and v.strip() not in ("", "-"))
     links = []
     if h["url"]: links.append(f'<a class="lb" href="{esc(h["url"])}" target="_blank" rel="noopener nofollow">청약홈 입주자모집공고 보기 →</a>')
-    if h["home"]: links.append(f'<a class="lb ghost" href="{esc(h["home"])}" target="_blank" rel="noopener nofollow">분양 홈페이지 →</a>')
     same = [x for x in all_h if x["sido"] == h["sido"] and x["id"] != h["id"]][:6]
     rel = ('<h2>같은 지역 분양 단지</h2><ul class="drs">' + "".join(row(x) for x in same) + f'</ul><p><a href="/bunyang/{SIDO_SLUG.get(h["sido"], "")}/">{esc(h["sido"])} 분양 전체 보기 →</a></p>') if same else ""
     fq = faq(h)
@@ -436,7 +447,7 @@ def danji_page(h, all_h, updated):
 <div class="dh"><div class="dh-tags">{badge(h)}<span class="cat">{esc(cat_label(h))}</span><span class="cat">{esc(h["sido"])}</span>{flags}{(f'<span class="fl crt">경쟁률 {cr_txt(h["rate_all"])}</span>') if h.get("rate_all") else ""}</div>
 <h1>{esc(h["name"])}</h1><p class="lead">{lead}</p>
 <div class="kf"><div><small>공급 세대</small><b>{h["units"]:,}세대</b></div><div><small>청약 접수</small><b>{kdate(h["sp_b"] or h["r_b"])}</b></div><div><small>당첨 발표</small><b>{kdate(h["win"])}</b></div><div><small>분양가</small><b>{esc(pr) if pr else "공고 확인"}</b></div></div>
-<div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">상담 신청</a></div></div>
+<div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">{"새 분양 알림 받기" if st == "마감" else "청약 알림 받기"}</a></div></div>
 <h2>청약 일정</h2><ol class="tline">{tl}</ol>
 <table class="tbl sched"><tbody>
 <tr><th>입주자모집공고</th><td>{esc(h["notice"])}</td></tr>
