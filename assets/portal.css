@@ -152,3 +152,45 @@ main.wrap.pw{max-width:1080px}
 .rs{font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;background:#e8f4ec;color:#1f6b3a}
 .rs.rs-x{background:#fbecea;color:#b0392b}
 .dt td small.rq{display:block;font-size:11px;color:#1d4fb8}
+/* 분양맵 */
+.mph{margin-bottom:8px}
+.mapbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:12px 0}
+.mfit{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--ink);background:#fff;cursor:pointer;margin-left:auto}
+.mfit.on{background:var(--gold);border-color:var(--gold)}
+.mapwrap{position:relative;display:grid;grid-template-columns:1fr 340px;border:1px solid var(--line);background:#fff;height:680px}
+#map{width:100%;height:100%}
+.mside{border-left:1px solid var(--line);overflow:auto;min-width:0}
+.mcnt{margin:0;padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;position:sticky;top:0;background:#fff;z-index:1}
+.mcnt b{font-size:16px}.mcnt small{color:var(--mute)}
+#mlist{list-style:none;margin:0;padding:0}
+#mlist li{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;display:grid;gap:3px}
+#mlist li:hover{background:var(--paper)}
+#mlist li .st{justify-self:start}
+#mlist li b{font-size:14.5px;line-height:1.35}
+#mlist li small{font-size:12px;color:var(--mute)}
+#mlist .ml{font-size:12px;color:#3c3a36}
+#mlist li.empty{cursor:default;color:var(--mute);font-size:13px;padding:30px 16px;text-align:center}
+.crt{font-style:normal}
+.mcard{position:absolute;left:16px;top:16px;z-index:10;width:300px;background:#fff;border:1px solid var(--ink);box-shadow:0 12px 30px -10px rgba(0,0,0,.35);padding:16px 16px 14px;display:grid;gap:5px}
+.mcard[hidden]{display:none}
+.mcard .st{justify-self:start}
+.mcard b{font-size:17px;line-height:1.35}
+.mcard small{font-size:12.5px;color:var(--mute)}
+.mcard dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin:8px 0 4px;padding:10px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.mcard dt{font-size:11.5px;color:var(--mute)}.mcard dd{margin:0;font-size:14px;font-weight:700}
+.mcard .mnote{font-size:11.5px;color:var(--mute);margin:2px 0}
+.mcard .mx{position:absolute;right:8px;top:4px;border:0;background:none;font-size:24px;cursor:pointer;color:var(--mute)}
+.ma{display:flex;gap:6px;margin-top:6px}
+.ma a{flex:1;text-align:center;padding:10px;font-size:13.5px;font-weight:700;text-decoration:none;border:1px solid var(--ink);color:var(--ink)}
+.ma a.g{background:var(--ink);color:#fff}
+.mleg{margin-top:10px}.mleg span{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;margin-right:12px}
+.d{display:inline-block;width:10px;height:10px;border-radius:50%}
+.d-예정{background:#2f62c9}.d-접수중{background:#c2a46d}.d-발표대기{background:#8a6d38}.d-계약{background:#2c8350}.d-마감{background:#9a958b}
+@media(max-width:900px){
+  .mapwrap{grid-template-columns:1fr;height:auto}
+  #map{height:62vh;min-height:380px}
+  .mside{border-left:0;border-top:1px solid var(--line);max-height:none}
+  .mcard{left:8px;right:8px;top:auto;bottom:8px;width:auto}
+  .mfit{margin-left:0}
+}
+.onmap{font-size:13px;margin-left:8px;color:var(--gold-d)}

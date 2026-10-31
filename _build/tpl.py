@@ -9,7 +9,7 @@ MARK = ('<svg class="mk" viewBox="0 0 80 100" aria-hidden="true"><path d="M10 96
         '<path d="M50 22 L66 34 L66 96 L50 96 Z" fill="currentColor" fill-opacity=".22"/><path d="M18 44 L32 82 L50 38" fill="none" stroke="currentColor" stroke-width="5"/>'
         '<path d="M50 22 L50 96" fill="none" stroke="currentColor" stroke-width="5"/></svg>')
 
-NAV = ('<a href="/bunyang/">분양정보</a><a href="/calendar/">청약캘린더</a><a href="/remain/">무순위·잔여</a>'
+NAV = ('<a href="/bunyang/">분양정보</a><a href="/map/">분양맵</a><a href="/calendar/">청약캘린더</a><a href="/remain/">무순위·잔여</a>'
        '<a href="/#sites">추천 현장</a><a href="/news/">분양 소식</a><a href="/guide/">가이드</a>')
 
 BIZ = ("상호 제이에이치기획 · 대표 하진훈 · 사업자등록번호 504-28-48757 · 통신판매업 신고 2021-진건퇴계원-278<br>"
@@ -68,7 +68,7 @@ def page(root, path, title, desc, body, crumbs, jsonld, og_type="article", updat
 </div></section>
 <footer class="ft"><div class="wrap">
 <div class="ftl"><a class="logo" href="/">{MARK}<b>VISIT ONE</b></a><p>모든 분양 현장 홍보관, 한 곳에서 예약 · 전국 분양정보와 청약 일정</p></div>
-<ul><li><a href="/bunyang/">전국 분양정보</a></li><li><a href="/calendar/">청약캘린더</a></li><li><a href="/remain/">무순위·잔여세대</a></li><li><a href="/glossary/">부동산 용어사전</a></li><li><a href="/service/">서비스 소개</a></li><li><a href="/partner/">현장 입점·제휴 문의</a></li><li><a href="/about/">회사 소개</a></li><li><a href="/privacy/"><b>개인정보처리방침</b></a></li></ul>
+<ul><li><a href="/bunyang/">전국 분양정보</a></li><li><a href="/map/">분양맵</a></li><li><a href="/calendar/">청약캘린더</a></li><li><a href="/remain/">무순위·잔여세대</a></li><li><a href="/glossary/">부동산 용어사전</a></li><li><a href="/service/">서비스 소개</a></li><li><a href="/partner/">현장 입점·제휴 문의</a></li><li><a href="/about/">회사 소개</a></li><li><a href="/privacy/"><b>개인정보처리방침</b></a></li></ul>
 <p class="disc">{BIZ}<br><br>분양정보는 한국부동산원 청약홈 공공데이터를 기반으로 하며, 실제 청약 시에는 반드시 청약홈의 입주자모집공고를 확인하세요. 본 사이트는 각 단지의 공식 홈페이지가 아닙니다.{(" 데이터 기준일 " + updated + ".") if updated else ""}</p>
 </div></footer>
 </body>

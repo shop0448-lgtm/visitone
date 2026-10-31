@@ -422,7 +422,7 @@ def danji_page(h, all_h, updated):
     info = [("공급 위치", h["addr"]), ("공급 규모", f'{h["units"]:,}세대'), ("주택 구분", cat_label(h) + (f' ({h["dtl"]})' if h["cat"] == "A" and h["dtl"] else "")),
             ("시공사", h["cnst"]), ("시행사", h["bsns"]), ("입주 예정", f'{h["move"][:4]}년 {int(h["move"][4:6])}월' if len(h["move"]) >= 6 else h["move"]),
             ("문의", tel_fmt(h["tel"]))]
-    info_html = "".join(f"<tr><th>{k}</th><td>{esc(v)}</td></tr>" for k, v in info if v and v.strip() not in ("", "-"))
+    info_html = "".join(f"<tr><th>{k}</th><td>{esc(v)}" + (f' <a class="onmap" href="/map/?id={h["id"]}">지도에서 보기 →</a>' if k == "공급 위치" else "") + "</td></tr>" for k, v in info if v and v.strip() not in ("", "-"))
     links = []
     if h["url"]: links.append(f'<a class="lb" href="{esc(h["url"])}" target="_blank" rel="noopener nofollow">청약홈 입주자모집공고 보기 →</a>')
     if h["home"]: links.append(f'<a class="lb ghost" href="{esc(h["home"])}" target="_blank" rel="noopener nofollow">분양 홈페이지 →</a>')
@@ -591,15 +591,81 @@ def inject_home(all_h, updated):
     json.dump({"updated": updated, "today": len(today_ev), "week": len(week), "total": len(all_h)},
               open(os.path.join(ROOT, "data", "home.json"), "w", encoding="utf-8"), ensure_ascii=False)
 
-def export_json(all_h, updated):
+def export_json(all_h, updated, geo=None):
+    geo = geo or {}
     rows = []
     for h in all_h:
         ps = [t["price"] for t in h["types"] if t["price"]]
         rows.append({"id": h["id"], "n": h["name"], "s": h["sido"], "c": h["cat"], "cl": cat_label(h), "st": status(h)[0], "stt": status(h)[1],
                      "a": short_addr(h["addr"]), "u": h["units"], "rb": h["sp_b"] or h["r_b"], "w": h["win"],
                      "pn": min(ps) if ps else 0, "px": max(ps) if ps else 0, "ex": sorted({int(t["excl"]) for t in h["types"] if t["excl"]}),
-                     "sp": sp_total(h), "pp": ppy_of(h), "cr": h.get("rate_all", 0)})
+                     "sp": sp_total(h), "pp": ppy_of(h), "cr": h.get("rate_all", 0),
+                     **({"y": geo[h["id"]][0], "x": geo[h["id"]][1], "g": geo[h["id"]][2]} if geo.get(h["id"]) else {})})
     json.dump({"updated": updated, "items": rows}, open(os.path.join(ROOT, "data", "danji.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+
+# ───────────────────────── 좌표 (카카오 로컬) ─────────────────────────
+GEO_PATH = os.path.join(ROOT, "data", "geo.json")
+KAKAO_JS = "1e57b440acbf772ee97bbcad6364d376"   # 도메인 제한 키(visitone.co.kr 전용) — 공개되어도 무방
+
+def kakao(path, q):
+    key = os.environ.get("KAKAO_REST_KEY")
+    if not key: return []
+    url = "https://dapi.kakao.com" + path + "?" + urllib.parse.urlencode({"query": q, "size": 5})
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"Authorization": "KakaoAK " + key})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.loads(r.read().decode("utf-8")).get("documents") or []
+        except Exception as e:
+            print("kakao retry", e); time.sleep(1 + attempt * 2)
+    return []
+
+def clean_addr(a):
+    a = re.sub(r"\([^)]*\)", " ", a or "")
+    a = re.sub(r"(일원|일대|외\s*\d+\s*필지|번지|지구\s*내).*$", "", a)
+    return re.sub(r"\s+", " ", a).strip()
+
+def geocode_all(all_h):
+    try: geo = json.load(open(GEO_PATH, encoding="utf-8"))
+    except Exception: geo = {}
+    if not os.environ.get("KAKAO_REST_KEY"): return geo
+    n = 0
+    for h in all_h:
+        if h["id"] in geo and geo[h["id"]]: continue
+        hit = None
+        ca = clean_addr(h["addr"])
+        for q in (ca, " ".join(ca.split()[:4])):
+            docs = kakao("/v2/local/search/address.json", q) if q else []
+            if docs: hit = (docs[0]["y"], docs[0]["x"], "addr"); break
+        if not hit:
+            area = " ".join(ca.split()[:2])
+            for d0 in kakao("/v2/local/search/keyword.json", re.sub(r"\(.*?\)", "", h["name"]))[:5]:
+                if area.split()[-1:] and area.split()[-1] in (d0.get("address_name") or ""):
+                    hit = (d0["y"], d0["x"], "kw"); break
+        if not hit:
+            docs = kakao("/v2/local/search/address.json", " ".join(ca.split()[:2]))
+            if docs: hit = (docs[0]["y"], docs[0]["x"], "area")
+        geo[h["id"]] = [round(float(hit[0]), 6), round(float(hit[1]), 6), hit[2]] if hit else None
+        n += 1
+        time.sleep(0.05)
+    json.dump(geo, open(GEO_PATH, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("geocoded", n)
+    return geo
+
+def map_page(updated):
+    body = f"""<header class="ph mph"><p class="cat">MAP</p><h1>분양맵</h1><p class="lead">전국 분양·청약 단지를 지도에서 찾아보세요. 마커를 누르면 일정·분양가·경쟁률을 볼 수 있습니다.</p></header>
+<div class="mapbar"><div class="chips" id="mst"><button type="button" class="on" data-v="">진행중</button><button type="button" data-v="예정">접수 예정</button><button type="button" data-v="접수중">접수중</button><button type="button" data-v="발표대기">발표 대기</button><button type="button" data-v="계약">계약</button><button type="button" data-v="all">마감 포함 전체</button></div>
+<div class="chips" id="mct"><button type="button" class="on" data-v="">전체 유형</button><button type="button" data-v="A">아파트</button><button type="button" data-v="O">오피스텔·도시형</button><button type="button" data-v="R">무순위·잔여</button><button type="button" data-v="P">민간임대</button></div>
+<button type="button" class="mfit" id="mfit">내 조건만</button></div>
+<div class="mapwrap"><div id="map"></div><aside class="mside"><p class="mcnt"><b id="mcnt">0</b>개 단지 <small>지도 화면 안</small></p><ul id="mlist"></ul></aside>
+<div class="mcard" id="mcard" hidden></div></div>
+<p class="legend mleg"><span><i class="d d-예정"></i>접수 예정</span><span><i class="d d-접수중"></i>접수중</span><span><i class="d d-발표대기"></i>발표 대기</span><span><i class="d d-계약"></i>계약</span><span><i class="d d-마감"></i>마감</span></p>
+<p class="muted">위치는 공고 주소 기준이며, 일부 단지는 지번이 확정되지 않아 동·구 단위로 표시될 수 있습니다. 데이터 기준일 {updated}.</p>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_JS}&autoload=false&libraries=clusterer"></script>
+<script src="/assets/match.js" defer></script>
+<script src="/assets/map.js" defer></script>"""
+    return page(ROOT, "/map/", "분양맵 · 지도로 보는 전국 분양정보", "전국 아파트·오피스텔·무순위 분양 단지를 지도에서 한눈에. 청약 일정, 분양가, 경쟁률을 지도 마커로 확인하세요.",
+                body, [("분양맵", "/map/")], [{"@context": "https://schema.org", "@type": "WebPage", "name": "분양맵", "url": SITE + "/map/"}], og_type="website", updated=updated)
 
 # ───────────────────────── 사이트맵 ─────────────────────────
 def write_sitemap(gen_paths):
@@ -658,7 +724,9 @@ def main():
                           rem, [("무순위·잔여세대", "/remain/")], updated), "0.8", "daily"))
     gen.append((calendar_page(all_h, updated), "0.9", "daily"))
     inject_home(all_h, updated)
-    export_json(all_h, updated)
+    geo = geocode_all(all_h)
+    export_json(all_h, updated, geo)
+    gen.append((map_page(updated), "0.8", "daily"))
     n = write_sitemap(gen)
     print(f"done: {len(all_h)} danji, sitemap {n} urls")
 
