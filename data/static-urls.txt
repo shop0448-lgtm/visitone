@@ -1,5 +1,4 @@
 /|1.0|weekly
-/cheongnyangni/|0.9|weekly
 /glossary/jiyeok-jutaek-johap/|0.6|monthly
 /glossary/johapwon-jagyeok/|0.6|monthly
 /glossary/johapwon-mojip-singo/|0.6|monthly

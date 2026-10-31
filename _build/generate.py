@@ -27,7 +27,7 @@ SPKEYS = [("신혼부부", "NWWDS_HSHLDCO"), ("생애최초", "LFE_FRST_HSHLDCO"
           ("청년", "YGMN_HSHLDCO"), ("노부모부양", "OLD_PARNTS_SUPORT_HSHLDCO"), ("기관추천", "INSTT_RECOMEND_HSHLDCO"),
           ("이전기관", "TRANSR_INSTT_ENFSN_HSHLDCO"), ("기타", "ETC_HSHLDCO")]
 REGION_PPY = {}
-CATNAME = {"A": "아파트", "O": "오피스텔·도시형", "R": "무순위·잔여세대", "P": "공공지원 민간임대", "T": "임의공급"}
+CATNAME = {"A": "아파트", "O": "오피스텔·도시형", "R": "무순위·잔여세대", "P": "민간임대", "T": "임의공급"}
 
 # ───────────────────────── 데이터 수집 ─────────────────────────
 CMP = "https://api.odcloud.kr/api/ApplyhomeInfoCmpetRtSvc/v1/"
@@ -277,6 +277,7 @@ def short_addr(a):
     return " ".join(parts[:3]) if parts else ""
 
 def cat_label(h):
+    if h["cat"] == "P": return h.get("sub") or "공공지원 민간임대"
     if h["cat"] == "O" and h["dtl"] and "/" not in h["dtl"]: return h["dtl"]
     if h["cat"] == "R" and h["dtl"]: return h["dtl"] if h["dtl"] in ("무순위", "불법행위 재공급", "계약취소주택") else "무순위·잔여"
     return CATNAME.get(h["cat"], "")
@@ -341,18 +342,35 @@ def row(h):
             + (f'<span class="crt">경쟁률 {cr_txt(h["rate_all"])}</span>' if h.get("rate_all") else "")
             + (f'<span class="pr">{esc(price_range(h))}</span>' if price_range(h) else "") + '</div></a></li>')
 
+def cal_links(h):
+    """구글 캘린더 / 휴대폰 캘린더(.ics) 추가 버튼 — 비용 0원 알림"""
+    evs = [(k, d(v)) for k, v in (("특별공급 접수", h["sp_b"]), ("청약 접수", h["r_b"]), ("당첨자 발표", h["win"])) if d(v) and d(v) >= TODAY]
+    if h["sp_b"] == h["r_b"]: evs = [e for e in evs if e[0] != "특별공급 접수"]
+    if not evs: return ""
+    url = f"{SITE}/danji/{h['id']}/"
+    g = "".join(f'<a class="calb" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?' + urllib.parse.urlencode({"action": "TEMPLATE", "text": f"[청약] {h['name']} {k}", "dates": f"{x:%Y%m%d}/{(x + dt.timedelta(days=1)):%Y%m%d}", "details": f"{url}"}) + f'">구글 캘린더 · {k} {x.month}.{x.day}</a>' for k, x in evs)
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//VISIT ONE//KR", "CALSCALE:GREGORIAN"]
+    for i, (k, x) in enumerate(evs):
+        lines += ["BEGIN:VEVENT", f"UID:{h['id']}-{x:%Y%m%d}-{i}@visitone.co.kr", f"DTSTAMP:{TODAY:%Y%m%d}T000000Z", f"DTSTART;VALUE=DATE:{x:%Y%m%d}",
+                  f"DTEND;VALUE=DATE:{(x + dt.timedelta(days=1)):%Y%m%d}", f"SUMMARY:[청약] {h['name']} {k}", f"DESCRIPTION:{url}", f"URL:{url}",
+                  "BEGIN:VALARM", "TRIGGER:-PT15H", "ACTION:DISPLAY", f"DESCRIPTION:내일 {k}", "END:VALARM", "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+    ics = "data:text/calendar;charset=utf-8," + urllib.parse.quote("\r\n".join(lines))
+    return f'<div class="cals"><a class="calb ics" href="{ics}" download="visitone-{h["id"]}.ics">📅 휴대폰 캘린더에 추가 (전날 알림)</a>{g}</div>'
+
 def consult_form(h):
     """청약 알림 신청 (VISIT ONE은 해당 단지의 분양 대행사가 아니므로 상담·예약 대신 일정 알림만 받음)"""
     closed = status(h)[0] == "마감"
     title = "비슷한 새 분양 알림 받기" if closed else "이 단지 청약 알림 받기"
     lead = ("이 단지는 청약이 끝났습니다. 같은 지역·비슷한 조건의 새 분양 공고가 나오면 알려드립니다." if closed else
-            "접수 시작 전날과 당첨 발표일에 잊지 않도록 문자로 알려드립니다. 같은 지역 새 공고 알림도 함께 받을 수 있습니다.")
+            "접수 시작 전날과 당첨 발표일을 놓치지 않도록 알려드립니다. 아래 버튼으로 지금 바로 내 휴대폰 캘린더에 일정을 넣어둘 수도 있습니다.")
     opts = ([("새공고", "같은 지역 새 분양 공고", True)] if closed else
             [("접수전날", "청약 접수 전날 알림", True), ("발표일", "당첨 발표일 알림", True), ("새공고", "같은 지역 새 분양 공고", False)])
     chk = "".join(f'<label class="pchk"><input type="checkbox" name="al" value="{v}"{" checked" if on else ""}> {t}</label>' for v, t, on in opts)
     nm = esc(h["name"]).replace("'", "")
     return f"""<section class="consult" id="consult"><h2>{title}</h2>
 <p>{lead}</p>
+{cal_links(h)}
 <form class="pform" id="cform" novalidate><div class="pgrid">
 <label>성함 *<input id="c_name" autocomplete="name"></label>
 <label>휴대폰 번호 *<input id="c_phone" type="tel" inputmode="numeric" placeholder="010-0000-0000"></label></div>
@@ -360,7 +378,7 @@ def consult_form(h):
 <label class="pagree"><input type="checkbox" id="c_agree"> [필수] 청약 일정 알림 발송을 위한 개인정보(성함, 휴대폰 번호, 관심 단지) 수집·이용에 동의합니다. 보유 기간: 알림 종료 후 1년 또는 삭제 요청 시까지. <a href="/privacy/">처리방침</a></label>
 <label class="pagree"><input type="checkbox" id="c_mkt"> [선택] 관심 조건과 비슷한 VISIT ONE 제휴 현장 안내를 문자·전화로 받겠습니다.</label>
 <p class="perr" id="c_err" hidden>성함과 휴대폰 번호를 입력하고 필수 동의에 체크해 주세요.</p>
-<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 문자로 알려드리겠습니다.</p>
+<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 알려드리겠습니다.</p>
 <p class="pnote">VISIT ONE은 이 단지의 분양 사업 주체나 대행사가 아니며, 청약 신청과 공식 문의는 청약홈과 사업 주체를 통해 진행됩니다.</p></form>
 <script>(function(){{var f=document.getElementById('cform'),v=function(i){{return document.getElementById(i).value.trim();}};
 document.getElementById('c_phone').addEventListener('input',function(e){{var x=e.target.value.replace(/[^0-9]/g,'').slice(0,11);if(x.length>7)x=x.replace(/(\\d{{3}})(\\d{{3,4}})(\\d{{4}})/,'$1-$2-$3');else if(x.length>3)x=x.slice(0,3)+'-'+x.slice(3);e.target.value=x;}});
@@ -481,7 +499,7 @@ def list_page(path, title, desc, intro, items, crumbs, updated, filters=True):
         for h in items: sido_counts[h["sido"]] = sido_counts.get(h["sido"], 0) + 1
         chips = ('<div class="flt"><div class="chips" id="fs"><button type="button" class="on" data-v="">전체 지역</button>'
                  + "".join(f'<button type="button" data-v="{esc(s)}">{esc(s)} <i>{sido_counts[s]}</i></button>' for s, _ in SIDO if s in sido_counts) + '</div>'
-                 '<div class="chips" id="fc"><button type="button" class="on" data-v="">전체 유형</button><button type="button" data-v="A">아파트</button><button type="button" data-v="O">오피스텔·도시형</button><button type="button" data-v="R">무순위·잔여</button><button type="button" data-v="P">공공지원 민간임대</button></div>'
+                 '<div class="chips" id="fc"><button type="button" class="on" data-v="">전체 유형</button><button type="button" data-v="A">아파트</button><button type="button" data-v="O">오피스텔·도시형</button><button type="button" data-v="R">무순위·잔여</button><button type="button" data-v="P">민간임대</button></div>'
                  '<div class="chips" id="ft"><button type="button" class="on" data-v="">진행중 전체</button><button type="button" data-v="예정">접수 예정</button><button type="button" data-v="접수중">접수중</button><button type="button" data-v="발표대기">발표 대기</button><button type="button" data-v="계약예정">계약 예정</button><button type="button" data-v="계약중">계약중</button><button type="button" data-v="마감">마감된 단지</button></div>'
                  '<label class="search"><span>단지 검색</span><input id="fq" type="search" placeholder="단지명·지역 입력"></label></div>')
     js = """<script>(function(){var st={s:'',c:'',t:'',q:''};var q0=new URLSearchParams(location.search).get('q');var qi=document.getElementById('fq');if(q0&&qi){qi.value=q0;st.q=q0;}
@@ -663,6 +681,22 @@ def geocode_all(all_h):
     print("geocoded", n)
     return geo
 
+KO_ALIAS = [("cheongnyangni", "청량리시그니처")]
+
+def make_aliases():
+    """제휴 현장 한글 주소 사본 생성 (/청량리시그니처/) — 원본과 같은 내용, 대표 주소(canonical)는 한글 주소"""
+    out = []
+    for en, ko in KO_ALIAS:
+        src = os.path.join(ROOT, en, "index.html")
+        if not os.path.exists(src): continue
+        h = open(src, encoding="utf-8").read()
+        h = re.sub(r'(src|href)="img/', rf'\1="/{en}/img/', h)
+        h = h.replace('"img/', f'"/{en}/img/').replace("'img/", f"'/{en}/img/").replace('href="../"', 'href="/"')
+        os.makedirs(os.path.join(ROOT, ko), exist_ok=True)
+        open(os.path.join(ROOT, ko, "index.html"), "w", encoding="utf-8").write(h)
+        out.append(("/" + urllib.parse.quote(ko) + "/", "0.9", "weekly"))
+    return out
+
 def map_page(updated):
     body = f"""<header class="ph mph"><p class="cat">MAP</p><h1>분양맵</h1><p class="lead">전국 분양·청약 단지를 지도에서 찾아보세요. 마커를 누르면 일정·분양가·경쟁률을 볼 수 있습니다.</p></header>
 <div class="mapbar"><div class="chips" id="mst"><button type="button" class="on" data-v="">진행중</button><button type="button" data-v="예정">접수 예정</button><button type="button" data-v="접수중">접수중</button><button type="button" data-v="발표대기">발표 대기</button><button type="button" data-v="계약">계약</button><button type="button" data-v="all">마감 포함 전체</button></div>
@@ -709,6 +743,8 @@ def main():
     if len(uniq) < 5:
         sys.exit("데이터가 너무 적습니다(API 오류 가능). 기존 페이지를 유지하고 종료합니다.")
     all_h = sorted(uniq.values(), key=lambda h: (h["notice"], h["id"]), reverse=True)
+    for h in all_h:   # 오피스텔/도시형 API 안의 민간임대 아파트는 '민간임대' 유형으로 묶음
+        if h["cat"] == "O" and "민간임대" in (h["dtl"] or ""): h["cat"], h["sub"] = "P", "민간임대"
     updated = TODAY.isoformat()
     for nm, _ in SIDO:
         v = [ppy_of(h) for h in all_h if h["sido"] == nm and h["cat"] == "A" and ppy_of(h)]
@@ -738,6 +774,7 @@ def main():
     geo = geocode_all(all_h)
     export_json(all_h, updated, geo)
     gen.append((map_page(updated), "0.8", "daily"))
+    gen += make_aliases()
     n = write_sitemap(gen)
     print(f"done: {len(all_h)} danji, sitemap {n} urls")
 
