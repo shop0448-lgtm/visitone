@@ -55,6 +55,7 @@
 <h2>단지 정보</h2><table class="tbl"><tbody><tr><th>공급 위치</th><td>서울특별시 중구 중림동 157-2번지 일원 <a class="onmap" href="/map/?id=2026910251">지도에서 보기 →</a></td></tr><tr><th>공급 규모</th><td>35세대</td></tr><tr><th>주택 구분</th><td>무순위</td></tr><tr><th>시행사</th><td>(주)이노디앤씨</td></tr><tr><th>입주 예정</th><td>2030년 5월</td></tr></tbody></table>
 <section class="consult" id="consult"><h2>비슷한 새 분양 알림 받기</h2>
 <p>이 단지는 청약이 끝났습니다. 같은 지역·비슷한 조건의 새 분양 공고가 나오면 알려드립니다.</p>
+
 <form class="pform" id="cform" novalidate><div class="pgrid">
 <label>성함 *<input id="c_name" autocomplete="name"></label>
 <label>휴대폰 번호 *<input id="c_phone" type="tel" inputmode="numeric" placeholder="010-0000-0000"></label></div>
@@ -62,7 +63,7 @@
 <label class="pagree"><input type="checkbox" id="c_agree"> [필수] 청약 일정 알림 발송을 위한 개인정보(성함, 휴대폰 번호, 관심 단지) 수집·이용에 동의합니다. 보유 기간: 알림 종료 후 1년 또는 삭제 요청 시까지. <a href="/privacy/">처리방침</a></label>
 <label class="pagree"><input type="checkbox" id="c_mkt"> [선택] 관심 조건과 비슷한 VISIT ONE 제휴 현장 안내를 문자·전화로 받겠습니다.</label>
 <p class="perr" id="c_err" hidden>성함과 휴대폰 번호를 입력하고 필수 동의에 체크해 주세요.</p>
-<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 문자로 알려드리겠습니다.</p>
+<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 알려드리겠습니다.</p>
 <p class="pnote">VISIT ONE은 이 단지의 분양 사업 주체나 대행사가 아니며, 청약 신청과 공식 문의는 청약홈과 사업 주체를 통해 진행됩니다.</p></form>
 <script>(function(){var f=document.getElementById('cform'),v=function(i){return document.getElementById(i).value.trim();};
 document.getElementById('c_phone').addEventListener('input',function(e){var x=e.target.value.replace(/[^0-9]/g,'').slice(0,11);if(x.length>7)x=x.replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3');else if(x.length>3)x=x.slice(0,3)+'-'+x.slice(3);e.target.value=x;});
