@@ -393,6 +393,14 @@ var b=new URLSearchParams();b.append('{GFE["site"]}','[청약알림] {nm}');b.ap
 b.append('{GFE["kind"]}','{h["id"]} · {esc(h["sido"])}');b.append('{GFE["memo"]}','알림: '+(al||'-')+' / 발표 {esc(h["win"] or "-")} / 제휴현장 안내 동의: '+(document.getElementById('c_mkt').checked?'Y':'N'));
 fetch('{GF}',{{method:'POST',mode:'no-cors',body:b}}).then(function(){{f.querySelector('.pbtn').disabled=true;document.getElementById('c_ok').hidden=false;}}).catch(function(){{document.getElementById('c_err').textContent='전송에 실패했습니다. 잠시 후 다시 시도해 주세요.';document.getElementById('c_err').hidden=false;}});}});}})();</script></section>"""
 
+def pre_html(h):
+    import extras
+    return extras.pre_box(h)
+
+def press_html(h):
+    import extras
+    return extras.danji_press(h, extras.PRESS_DB, extras.NEWS_LIST)
+
 def mkt_html(h):
     import extras
     return extras.mkt_box(h)
@@ -485,9 +493,10 @@ def danji_page(h, all_h, updated):
 </tbody></table>
 <h2>타입별 공급 정보</h2>{ttable}
 {cmp_box(h)}
-{price_box(h)}{mkt_html(h)}{sp_box(h)}
+{price_box(h)}{mkt_html(h)}{pre_html(h)}{sp_box(h)}
 <h2>단지 정보</h2><table class="tbl"><tbody>{info_html}</tbody></table>
 {consult_form(h)}
+{press_html(h)}
 {faq_html}
 {rel}
 <p class="muted src">출처: 한국부동산원 청약홈 분양정보(공공데이터). 데이터 기준일 {updated}. 본 페이지는 정보 제공용이며 해당 단지의 공식 홈페이지가 아닙니다. 청약 전 반드시 청약홈의 입주자모집공고를 확인하세요.</p>
@@ -500,6 +509,14 @@ def danji_page(h, all_h, updated):
     sl = SIDO_SLUG.get(h["sido"], "")
     crumbs = [("분양정보", "/bunyang/")] + ([(h["sido"], f"/bunyang/{sl}/")] if sl else []) + [(h["name"], f"/danji/{h['id']}/")]
     return page(ROOT, f"/danji/{h['id']}/", f"{h['name']} 분양정보·청약일정", desc, body, crumbs, ld, updated=updated)
+
+def LIVEJS():
+    import extras
+    return extras.LIVE_JS
+
+def live_now(extra="청약홈 공공데이터"):
+    import extras
+    return extras.live_badge(extra)
 
 def list_page(path, title, desc, intro, items, crumbs, updated, filters=True):
     chips = ""
@@ -516,7 +533,7 @@ function ap(){var n=0;document.querySelectorAll('.drs .dr').forEach(function(li)
 [['fs','s'],['fc','c'],['ft','t']].forEach(function(p){var g=document.getElementById(p[0]);if(!g)return;g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});st[p[1]]=b.dataset.v;ap();});});
 if(qi)qi.addEventListener('input',function(){st.q=qi.value.trim();ap();});window.addEventListener('vo-filter',ap);ap();})();</script><script src="/assets/match.js" defer></script>""" if filters else ""
     body = (f'<header class="ph"><p class="cat">BUNYANG</p><h1>{esc(title)}</h1><p class="lead">{intro}</p></header>{chips}' +
-            ('<div class="fitbar" id="fitbar"><span class="fb-sum"></span><button type="button" class="fb-toggle" hidden>내 조건만 보기</button><button type="button" class="fb-set">내 조건 설정</button></div>' if filters else "") + f'<p class="cntline"><b id="cnt">{len(items)}</b>개 단지 · 데이터 기준일 {updated}</p><ul class="drs">' + "".join(row(h) for h in items) + "</ul>" + ("" if items else '<p class="none">현재 이 지역에 진행 중인 분양·청약 단지가 없습니다. <a href="/bunyang/">전국 분양정보</a>에서 다른 지역을 확인해 보세요.</p>') + js)
+            ('<div class="fitbar" id="fitbar"><span class="fb-sum"></span><button type="button" class="fb-toggle" hidden>내 조건만 보기</button><button type="button" class="fb-set">내 조건 설정</button></div>' if filters else "") + f'<p class="cntline"><b id="cnt">{len(items)}</b>개 단지 · {live_now()}</p><ul class="drs">' + "".join(row(h) for h in items) + "</ul>" + LIVEJS() + ("" if items else '<p class="none">현재 이 지역에 진행 중인 분양·청약 단지가 없습니다. <a href="/bunyang/">전국 분양정보</a>에서 다른 지역을 확인해 보세요.</p>') + js)
     ld = [{"@context": "https://schema.org", "@type": "ItemList", "name": title, "numberOfItems": len(items),
            "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate(items[:100])]}]
     return page(ROOT, path, title, desc, body, crumbs, ld, og_type="website", updated=updated)
@@ -562,11 +579,17 @@ def calendar_page(all_h, updated):
         tag = "오늘" if x == TODAY else ("내일" if x == TODAY + dt.timedelta(days=1) else "")
         blocks.append(f'<section class="cday{" today" if x == TODAY else ""}{" past" if x < TODAY else ""}" id="d{x.isoformat()}"><h3>{x.month}월 {x.day}일 ({"월화수목금토일"[x.weekday()]}){(" <em>" + tag + "</em>") if tag else ""}</h3><ul>{lis}</ul></section>')
     js = """<script>(function(){var tb=document.querySelectorAll('.mtabs button');tb.forEach(function(b){b.addEventListener('click',function(){tb.forEach(function(x){x.classList.toggle('on',x===b);document.getElementById(x.dataset.m).hidden=x!==b;});});});
+var dp=document.getElementById('dayp'),mob=function(){return window.innerWidth<=720;};
+function showDay(ds,cell){var sec=document.getElementById('d'+ds),d=new Date(ds+'T00:00:00'),t=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+'일월화수목금토'[d.getDay()]+')';
+document.querySelectorAll('.cc.sel').forEach(function(c){c.classList.remove('sel');});if(cell)cell.classList.add('sel');
+dp.innerHTML='<h3>'+t+'</h3>'+(sec?'<ul>'+sec.querySelector('ul').innerHTML+'</ul>':'<p class="muted">이 날은 표시할 일정이 없습니다.</p>');}
+document.querySelectorAll('.cc:not(.empty)').forEach(function(c){c.addEventListener('click',function(e){if(!mob())return;e.preventDefault();var a=c.querySelector('.cd');showDay(a.getAttribute('href').slice(2),c);dp.scrollIntoView({behavior:'smooth',block:'nearest'});});});
+(function(){var first=document.querySelector('.cday:not(.past)');if(first){var ds=first.id.slice(1),c=[].find.call(document.querySelectorAll('.cd'),function(a){return a.getAttribute('href')==='#d'+ds&&!a.closest('.cal').hidden;});showDay(ds,c?c.parentNode:null);}})();
 var on={};document.querySelectorAll('.legend button').forEach(function(b){on[b.dataset.k]=true;b.addEventListener('click',function(){on[b.dataset.k]=!on[b.dataset.k];b.classList.toggle('off',!on[b.dataset.k]);
 document.querySelectorAll('.ce').forEach(function(e){var k=e.className.match(/ce-(\\S+)/)[1];e.hidden=!on[k];});document.querySelectorAll('.cday li').forEach(function(li){var k=li.querySelector('.ek').className.match(/ek-(\\S+)/)[1];li.hidden=!on[k];});});});})();</script>"""
     body = (f'<header class="ph"><p class="cat">CALENDAR</p><h1>청약캘린더</h1><p class="lead">이번 달과 다음 달의 특별공급·청약 접수·당첨 발표·계약 일정을 달력으로 확인하세요. 단지명을 누르면 상세 정보로 이동합니다.</p></header>'
             f'<div class="calbar"><div class="mtabs">{tabs}</div><div class="legend"><button type="button" data-k="특별공급" class="ek ek-특별공급">특별공급</button><button type="button" data-k="청약" class="ek ek-청약">청약 접수</button><button type="button" data-k="당첨" class="ek ek-당첨">당첨 발표</button><button type="button" data-k="계약" class="ek ek-계약">계약 시작</button></div></div>'
-            + "".join(grids) + '<h2 class="clh">날짜별 일정</h2>' + ("".join(blocks) or '<p class="muted">예정된 일정이 없습니다.</p>') + f'<p class="muted">데이터 기준일 {updated} · 출처 한국부동산원 청약홈</p>' + js)
+            + "".join(grids) + '<div class="dayp" id="dayp" aria-live="polite"></div><h2 class="clh">날짜별 일정</h2>' + ("".join(blocks) or '<p class="muted">예정된 일정이 없습니다.</p>') + f'<p class="muted">{live_now("출처 한국부동산원 청약홈")}</p>' + LIVEJS() + js)
     return page(ROOT, "/calendar/", "청약캘린더 · 이번 달 청약 일정", "이번 달과 다음 달의 청약 접수, 특별공급, 당첨자 발표, 계약 일정을 달력으로 한눈에. 전국 아파트·오피스텔·무순위 청약 일정을 매일 업데이트합니다.",
                 body, [("청약캘린더", "/calendar/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "청약캘린더", "url": SITE + "/calendar/"}], og_type="website", updated=updated)
 
@@ -622,6 +645,7 @@ def inject_home(all_h, updated):
         "n_total": f'{len(all_h):,}',
         "n_open": str(sum(1 for h in all_h if status(h)[0] == "접수중")),
         "n_week": str(len(week)),
+        "live": live_now("청약홈 공공데이터 · 매일 자동 업데이트"),
     }
     for k, v in blocks.items():
         s = re.sub(r"(<!--AUTO:%s-->).*?(<!--/AUTO:%s-->)" % (k, k), lambda m: m.group(1) + v + m.group(2), s, flags=re.S)
@@ -714,7 +738,7 @@ def map_page(updated):
 <div class="mapwrap"><div id="map"></div><aside class="mside"><p class="mcnt"><b id="mcnt">0</b>개 단지 <small>지도 화면 안</small></p><ul id="mlist"></ul></aside>
 <div class="mcard" id="mcard" hidden></div></div>
 <p class="legend mleg"><span><i class="d d-예정"></i>접수 예정</span><span><i class="d d-접수중"></i>접수중</span><span><i class="d d-발표대기"></i>발표 대기</span><span><i class="d d-계약"></i>계약</span><span><i class="d d-마감"></i>마감</span></p>
-<p class="muted">위치는 공고 주소 기준이며, 일부 단지는 지번이 확정되지 않아 동·구 단위로 표시될 수 있습니다. 데이터 기준일 {updated}.</p>
+<p class="muted">위치는 공고 주소 기준이며, 일부 단지는 지번이 확정되지 않아 동·구 단위로 표시될 수 있습니다. {live_now()}</p>{LIVEJS()}
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_JS}&autoload=false&libraries=clusterer"></script>
 <script src="/assets/match.js" defer></script>
 <script src="/assets/map.js" defer></script>"""
@@ -764,8 +788,7 @@ def main():
     import extras
     extras.init(sys.modules[__name__])
     geo = geocode_all(all_h)
-    try: extras.market_compare(all_h, geo, TODAY)
-    except Exception as e: print("market error", e)
+    extras.before_pages(all_h, geo, TODAY)
     gen = []
     for h in all_h:
         gen.append((danji_page(h, all_h, updated), "0.6", "weekly"))

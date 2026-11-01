@@ -147,7 +147,7 @@ def mkt_box(h):
 # ═════════════════════════ 2) 정책·제도 ═════════════════════════
 POLICY = "https://apis.data.go.kr/1371000/policyNewsService2/policyNewsList2"
 POL_MIN = ("국토교통부", "금융위원회", "기획재정부", "재정경제부", "행정안전부", "국무조정실")
-POL_RE = re.compile(r"주택|청약|분양|부동산|아파트|공급|전세|월세|임대|택지|재건축|재개발|신도시|주거|대출|DSR|LTV|공공주택|정비사업")
+POL_RE = re.compile(r"주택|청약|분양|부동산|아파트|전세|월세|임대주택|택지|재건축|재개발|신도시|주거|주담대|주택담보|DSR|LTV|공공주택|정비사업|집값|입주")
 
 def fetch_policy(today):
     db = _load("policy.json", {})
@@ -162,7 +162,7 @@ def fetch_policy(today):
                 g = lambda n: (it.findtext(n) or "").strip()
                 nid, title, mins = g("NewsItemId"), g("Title"), g("MinisterCode")
                 if not nid or nid in db: continue
-                text = title + " " + g("SubTitle1") + " " + re.sub(r"<[^>]+>", " ", g("DataContents"))[:1500]
+                text = title + " " + g("SubTitle1")
                 if not any(m in mins for m in POL_MIN) or not POL_RE.search(text): continue
                 m = re.match(r"(\d{2})/(\d{2})/(\d{4})", g("ApproveDate"))
                 date = f"{m.group(3)}-{m.group(1)}-{m.group(2)}" if m else today.isoformat()
@@ -172,7 +172,7 @@ def fetch_policy(today):
         # 최근 400건만 유지
         db = dict(sorted(db.items(), key=lambda kv: kv[1]["date"], reverse=True)[:400])
         _save("policy.json", db)
-    return sorted(db.values(), key=lambda x: (x["date"], x["id"]), reverse=True)
+    return sorted([x for x in db.values() if POL_RE.search(x["title"] + " " + (x.get("sub") or ""))], key=lambda x: (x["date"], x["id"]), reverse=True)
 
 def clean_body(htm):
     htm = re.sub(r"(?is)<(script|style|iframe)[^>]*>.*?</\1>", "", htm or "")
@@ -293,7 +293,7 @@ def weekly_report(all_h, policy, updated):
     return [("/news/weekly/", "0.8", "weekly")] + [(f"/news/weekly/{r['id']}/", "0.7", "weekly") for r in reps], reps
 
 # ═════════════════════════ 4) 분양 소식 허브 ═════════════════════════
-def news_hub(reps, policy, updated):
+def news_hub(reps, policy, updated, news=None):
     own = []
     for f in glob.glob(os.path.join(G.ROOT, "news", "*", "index.html")):
         slug = f.split(os.sep)[-2]
@@ -305,9 +305,11 @@ def news_hub(reps, policy, updated):
     w = "".join(f'<li><a href="/news/weekly/{r["id"]}/"><small class="nd">주간 리포트 · {r["date"]}</small><b>{esc(r["title"])}</b><span>{esc(r["lead"][:110])}</span></a></li>' for r in reps[:4])
     p = "".join(f'<li><a href="/news/policy/{x["id"]}/"><small class="nd">정책·제도 · {x["date"]} · {esc(x["min"])}</small><b>{esc(x["title"])}</b><span>{esc(plain(x["sub"] or x["body"], 110))}</span></a></li>' for x in policy[:8])
     o = "".join(f'<li><a href="/news/{x["slug"]}/"><small class="nd">VISIT ONE · {x["date"]}</small><b>{esc(x["title"])}</b><span>{esc(x["desc"][:110])}</span></a></li>' for x in own)
+    nw = "".join(f'<li><a href="{esc(x["url"])}" target="_blank" rel="noopener nofollow"><small class="nd">분양 뉴스 · {esc(x["src"])} · {esc(x["date"][:10])}</small><b>{esc(x["title"])}</b><span>{esc(x["desc"][:110])}</span></a></li>' for x in (news or [])[:6])
     body = (f'<header class="ph"><p class="cat">NEWS</p><h1>분양 소식</h1><p class="lead">매주 청약 리포트와 부동산 정책·제도 변화를 한곳에서 확인하세요. 매일 자동으로 업데이트됩니다.</p></header>'
             f'<h2 class="nh">주간 청약 리포트 <a href="/news/weekly/">전체 보기 →</a></h2><ul class="gl">{w}</ul>'
-            f'<h2 class="nh">정책·제도 <a href="/news/policy/">전체 보기 →</a></h2><ul class="gl">{p or "<li class=none>수집 중입니다.</li>"}</ul>'
+            + (f'<h2 class="nh">분양 뉴스 <a href="/news/press/">전체 보기 →</a></h2><ul class="gl">{nw}</ul>' if nw else "")
+            + f'<h2 class="nh">정책·제도 <a href="/news/policy/">전체 보기 →</a></h2><ul class="gl">{p or "<li class=none>수집 중입니다.</li>"}</ul>'
             + (f'<h2 class="nh">VISIT ONE 소식</h2><ul class="gl">{o}</ul>' if o else ""))
     G.page(G.ROOT, "/news/", "분양 소식 · 주간 청약 리포트 · 정책·제도", "매주 청약 일정 리포트와 청약·분양·주택 정책 소식을 매일 업데이트합니다. 비지트원 VISIT ONE 분양 소식.",
            body, [("분양 소식", "/news/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "분양 소식", "url": G.SITE + "/news/"}], og_type="website", updated=updated)
@@ -325,6 +327,218 @@ def run(all_h, geo, updated):
     try:
         w, reps = weekly_report(all_h, policy, updated); out += w
     except Exception as e: print("weekly error", e)
-    try: out += news_hub(reps, policy, updated)
+    news = []
+    try:
+        pp, news = press_page(PRESS_DB, all_h, updated); out += pp
+    except Exception as e: print("press error", e)
+    try: out += news_hub(reps, policy, updated, news)
     except Exception as e: print("hub error", e)
     return [x if isinstance(x, tuple) else (x, "0.6", "monthly") for x in out]
+
+PRESS_DB = {"news": {}, "blog": {}}
+NEWS_LIST = []
+
+def before_pages(all_h, geo, today):
+    """단지 페이지 만들기 전에 실행: 실거래 비교, 분양권, 뉴스·블로그 수집"""
+    global PRESS_DB, NEWS_LIST
+    for fn, args in ((market_compare, (all_h, geo, today)), (presale, (all_h, geo, today))):
+        try: fn(*args)
+        except Exception as e: print(fn.__name__, "error", e)
+    try:
+        PRESS_DB = fetch_press(all_h)
+        NEWS_LIST = sorted(PRESS_DB.get("news", {}).values(), key=lambda x: x["date"], reverse=True)
+        for x in NEWS_LIST: x["rel"] = [h["id"] for h in press_rel(all_h, x["title"] + " " + x["desc"])]
+    except Exception as e: print("press fetch error", e)
+
+def danji_extra(h):
+    return pre_box(h) + danji_press(h, PRESS_DB, NEWS_LIST)
+
+# ═════════════════════════ 5) LIVE 표시 ═════════════════════════
+def now_kst():
+    return dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+
+def live_badge(extra=""):
+    n = now_kst()
+    return (f'<span class="live" data-ts="{n.isoformat()}"><i></i>LIVE</span> '
+            f'<span class="live-t">{n.month}.{n.day} {n:%H:%M} 업데이트</span>{(" · " + extra) if extra else ""}')
+
+LIVE_JS = ("<script>(function(){document.querySelectorAll('.live[data-ts]').forEach(function(e){var t=new Date(e.dataset.ts),m=Math.round((Date.now()-t)/60000),s;"
+           "if(isNaN(m))return;s=m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전';var n=e.nextElementSibling;if(n)n.textContent=s+' 업데이트';});})();</script>")
+
+# ═════════════════════════ 6) 분양권 프리미엄 ═════════════════════════
+SILV = "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade"
+
+def fetch_silv(lawd, ym, cache, today):
+    k = f"S:{lawd}:{ym}"
+    final = ym < (today.replace(day=1) - dt.timedelta(days=1)).strftime("%Y%m")
+    if final and k in cache: return cache[k]
+    key = os.environ.get("APPLYHOME_KEY")
+    if not key: return cache.get(k, [])
+    out, page = [], 1
+    while True:
+        t = _get(SILV + "?" + urllib.parse.urlencode({"serviceKey": key, "LAWD_CD": lawd, "DEAL_YMD": ym, "numOfRows": 1000, "pageNo": page}))
+        try: root = ET.fromstring(t)
+        except Exception: break
+        items = root.findall(".//item")
+        for it in items:
+            g = lambda n: (it.findtext(n) or "").strip()
+            if g("cdealType") in ("O", "Y"): continue
+            try:
+                out.append([g("aptNm"), round(float(g("excluUseAr") or 0), 1), int(g("dealAmount").replace(",", "") or 0),
+                            f'{g("dealYear")}-{int(g("dealMonth") or 0):02d}-{int(g("dealDay") or 0):02d}'])
+            except Exception: pass
+        total = int(root.findtext(".//totalCount") or 0)
+        if page * 1000 >= total or not items: break
+        page += 1
+    cache[k] = out
+    time.sleep(0.05)
+    return out
+
+def _nm(s):
+    s = re.sub(r"\(.*?\)|\[.*?\]", "", s or "")
+    return re.sub(r"[\s·\-_.,]|아파트|단지$", "", s)
+
+def presale(all_h, geo, today):
+    """분양 단지 이름과 같은 분양권 전매 거래를 찾아 h['pre'] = [{label, excl, price, avg, n, last, lo, hi}]"""
+    targets = [h for h in all_h if h["cat"] in ("A", "R", "T") and h["types"] and G.d(h["c_b"]) and G.d(h["c_b"]) <= today]
+    if not targets: return
+    reg = region_codes(targets, geo)
+    cache = _load("silv.json", {})
+    months = [(today.replace(day=1) - dt.timedelta(days=31 * i)).strftime("%Y%m") for i in range(6)]
+    by = {}
+    for h in targets:
+        r = reg.get(h["id"])
+        if r: by.setdefault(r[0], []).append(h)
+    for lawd, hs in by.items():
+        tr = []
+        for ym in months: tr += fetch_silv(lawd, ym, cache, today)
+        if not tr: continue
+        for h in hs:
+            hn = _nm(h["name"])
+            if len(hn) < 3: continue
+            mine = [x for x in tr if x[0] and (_nm(x[0]) in hn or hn in _nm(x[0]))]
+            if not mine: continue
+            rows = {}
+            for t in h["types"]:
+                if not t["excl"] or not t["price"]: continue
+                same = [x for x in mine if abs(x[1] - t["excl"]) <= 1]
+                if not same: continue
+                k = int(t["excl"])
+                ps = sorted(x[2] for x in same)
+                cand = dict(label=t["label"], excl=t["excl"], price=t["price"], avg=int(sum(ps) / len(ps)), n=len(ps), lo=ps[0], hi=ps[-1],
+                            last=max(x[3] for x in same))
+                if k not in rows or t["price"] > rows[k]["price"]: rows[k] = cand
+            if rows: h["pre"] = sorted(rows.values(), key=lambda x: x["excl"])
+    keep = set(months)
+    cache = {k: v for k, v in cache.items() if k.split(":")[2] in keep}
+    _save("silv.json", cache)
+
+def pre_box(h):
+    rows = h.get("pre") or []
+    if not rows: return ""
+    won = G.won
+    trs = ""
+    for r in rows:
+        prem = r["avg"] - r["price"]
+        tag = (f'<span class="mk-hi">웃돈 약 {won(prem)}</span>' if prem > 300 else
+               f'<span class="mk-lo">분양가보다 약 {won(-prem)} 낮게 거래</span>' if prem < -300 else '<span class="mk-eq">분양가 수준</span>')
+        trs += (f'<tr><td><b>{esc(r["label"])}</b><small>{r["excl"]:.0f}㎡</small></td><td>{won(r["price"])}</td>'
+                f'<td class="pr">{won(r["avg"])}<small>{r["n"]}건 · {won(r["lo"])}~{won(r["hi"])} · 최근 {r["last"]}</small></td><td>{tag}</td></tr>')
+    return (f'<h2>분양권 실거래가 · 프리미엄</h2><p class="muted">최근 6개월 국토교통부 분양권 전매 실거래 신고 중 이 단지·같은 면적(전용 ±1㎡) 거래입니다.</p>'
+            f'<div class="tw"><table class="tbl dt mk"><thead><tr><th>타입</th><th>최고 분양가</th><th>분양권 평균 거래가</th><th>프리미엄(추정)</th></tr></thead><tbody>{trs}</tbody></table></div>'
+            f'<p class="muted">※ 프리미엄은 평균 거래가에서 타입별 최고 분양가를 뺀 단순 추정치이며, 층·옵션·발코니 확장 비용에 따라 실제와 다릅니다. 출처: 국토교통부 실거래가 공개시스템</p>')
+
+# ═════════════════════════ 7) 분양 뉴스 (NAVER API HUB) ═════════════════════════
+NAVER = "https://naverapihub.apigw.ntruss.com/search/v1/"
+PRESS_Q = ["아파트 분양", "청약 일정", "무순위 청약", "분양가", "견본주택 개관", "민간임대 아파트", "분양권 전매"]
+OUTLET = {"chosun": "조선일보", "joongang": "중앙일보", "donga": "동아일보", "hani": "한겨레", "khan": "경향신문", "mk.co.kr": "매일경제",
+          "hankyung": "한국경제", "sedaily": "서울경제", "mt.co.kr": "머니투데이", "edaily": "이데일리", "fnnews": "파이낸셜뉴스", "asiae": "아시아경제",
+          "heraldcorp": "헤럴드경제", "news1": "뉴스1", "newsis": "뉴시스", "yna.co.kr": "연합뉴스", "yonhapnews": "연합뉴스", "kbs": "KBS", "mbc": "MBC",
+          "sbs": "SBS", "ytn": "YTN", "jtbc": "JTBC", "nocutnews": "노컷뉴스", "inews24": "아이뉴스24", "etoday": "이투데이", "ajunews": "아주경제",
+          "newspim": "뉴스핌", "dailian": "데일리안", "kukinews": "쿠키뉴스", "metroseoul": "메트로신문", "seoul.co.kr": "서울신문", "segye": "세계일보",
+          "kmib": "국민일보", "munhwa": "문화일보", "hankookilbo": "한국일보", "bizwatch": "비즈워치", "businesspost": "비즈니스포스트",
+          "dnews": "대한경제", "housingherald": "하우징헤럴드", "rcast": "알캐스트", "ddaily": "디지털데일리", "biz.chosun": "조선비즈", "mbn": "MBN"}
+
+def naver(path, params):
+    cid, sec = os.environ.get("NAVER_CLIENT_ID"), os.environ.get("NAVER_CLIENT_SECRET")
+    if not (cid and sec): return []
+    t = _get(NAVER + path + "?" + urllib.parse.urlencode(params), {"X-NCP-APIGW-API-KEY-ID": cid, "X-NCP-APIGW-API-KEY": sec})
+    try: return json.loads(t).get("items") or []
+    except Exception: return []
+
+def outlet(url):
+    host = urllib.parse.urlparse(url or "").netloc.lower()
+    for k, v in OUTLET.items():
+        if k in host: return v
+    return re.sub(r"^(www|m|news|biz)\.", "", host).split(":")[0]
+
+def strip_tags(s): return _html.unescape(re.sub(r"<[^>]+>", "", s or "")).strip()
+
+def pubdate(s):
+    try: return dt.datetime.strptime(s, "%a, %d %b %Y %H:%M:%S %z").astimezone(dt.timezone(dt.timedelta(hours=9)))
+    except Exception: return None
+
+def fetch_press(all_h):
+    db = _load("press.json", {"news": {}, "blog": {}})
+    if os.environ.get("NAVER_CLIENT_ID"):
+        for q in PRESS_Q:
+            for it in naver("news", {"query": q, "display": 40, "sort": "date"}):
+                url = it.get("originallink") or it.get("link")
+                if not url or url in db["news"]: continue
+                p = pubdate(it.get("pubDate", ""))
+                db["news"][url] = dict(url=url, nlink=it.get("link"), title=strip_tags(it.get("title")), desc=strip_tags(it.get("description")),
+                                       src=outlet(url), date=p.strftime("%Y-%m-%d %H:%M") if p else "", q=q)
+            time.sleep(0.15)
+        # 진행 단지별 블로그 후기 (3일마다 갱신)
+        today = G.TODAY.isoformat()
+        for h in all_h:
+            if G.status(h)[0] == "마감": continue
+            b = db["blog"].get(h["id"])
+            if b and b.get("at") and (G.TODAY - G.d(b["at"])).days < 3: continue
+            items = naver("blog", {"query": re.sub(r"\(.*?\)", "", h["name"]).strip() + " 분양", "display": 5, "sort": "sim"})
+            db["blog"][h["id"]] = dict(at=today, items=[dict(title=strip_tags(x.get("title")), url=x.get("link"), name=strip_tags(x.get("bloggername")),
+                                                             date=x.get("postdate", "")) for x in items])
+            time.sleep(0.1)
+        news = sorted(db["news"].values(), key=lambda x: x["date"], reverse=True)[:400]
+        db["news"] = {x["url"]: x for x in news}
+        _save("press.json", db)
+    return db
+
+def press_rel(all_h, text):
+    hits = []
+    for h in all_h:
+        n = re.sub(r"\(.*?\)", "", h["name"]).strip()
+        if len(n) >= 5 and n in text: hits.append(h)
+    return hits[:3]
+
+def press_page(db, all_h, updated):
+    news = sorted(db.get("news", {}).values(), key=lambda x: x["date"], reverse=True)
+    for x in news: x["rel"] = [h["id"] for h in press_rel(all_h, x["title"] + " " + x["desc"])]
+    byid = {h["id"]: h for h in all_h}
+    lis = ""
+    for x in news[:150]:
+        rel = "".join(f'<a class="prel" href="/danji/{i}/">{esc(byid[i]["name"])} · {G.status(byid[i])[1]}</a>' for i in x["rel"] if i in byid)
+        lis += (f'<li class="pr-item"><small class="nd">{esc(x["src"])} · {esc(x["date"])}</small><a class="pr-t" href="{esc(x["url"])}" target="_blank" rel="noopener nofollow">{esc(x["title"])}</a>'
+                f'<p>{esc(x["desc"][:140])}</p><div class="pr-f">{rel}<a class="pr-more" href="{esc(x["url"])}" target="_blank" rel="noopener nofollow">원문 보기 →</a></div></li>')
+    body = (f'<header class="ph"><p class="cat">PRESS</p><h1>분양 뉴스</h1><p class="lead">분양·청약 관련 언론 보도를 매일 모았습니다. 기사에 나온 단지가 VISIT ONE 분양정보에 있으면 청약 일정과 함께 바로 연결해 드립니다.</p>'
+            f'<p class="liveline">{live_badge("네이버 뉴스 검색")}</p></header>'
+            f'<ul class="press">{lis or "<li class=none>뉴스를 모으는 중입니다.</li>"}</ul>'
+            f'<p class="muted src">기사의 저작권은 각 언론사에 있습니다. 제목과 요약은 네이버 검색 결과를 인용했으며, 전체 내용은 원문에서 확인하세요.</p>{LIVE_JS}')
+    G.page(G.ROOT, "/news/press/", "분양 뉴스 · 오늘의 분양·청약 보도", "아파트 분양, 청약, 무순위, 분양가 관련 언론 보도를 매일 모아 관련 단지 청약 정보와 함께 보여드립니다.",
+           body, [("분양 소식", "/news/"), ("분양 뉴스", "/news/press/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "분양 뉴스", "url": G.SITE + "/news/press/"}],
+           og_type="website", updated=updated, robots="index,follow")
+    return [("/news/press/", "0.7", "daily")], news
+
+def danji_press(h, db, news):
+    """단지 상세용: 관련 뉴스 + 블로그"""
+    n = [x for x in news if h["id"] in (x.get("rel") or [])][:5]
+    b = (db.get("blog", {}).get(h["id"]) or {}).get("items") or []
+    if not n and not b: return ""
+    out = ""
+    if n:
+        out += '<h2>관련 뉴스</h2><ul class="press sm">' + "".join(
+            f'<li class="pr-item"><small class="nd">{esc(x["src"])} · {esc(x["date"][:10])}</small><a class="pr-t" href="{esc(x["url"])}" target="_blank" rel="noopener nofollow">{esc(x["title"])}</a></li>' for x in n) + "</ul>"
+    if b:
+        out += '<h2>블로그 후기·분석</h2><ul class="press sm">' + "".join(
+            f'<li class="pr-item"><small class="nd">{esc(x["name"])} · {esc(x["date"][:4])}.{esc(x["date"][4:6])}.{esc(x["date"][6:8])}</small><a class="pr-t" href="{esc(x["url"])}" target="_blank" rel="noopener nofollow">{esc(x["title"])}</a></li>' for x in b) + "</ul>"
+    return out + '<p class="muted">외부 글은 작성자 의견이며 VISIT ONE의 입장과 다를 수 있습니다.</p>'

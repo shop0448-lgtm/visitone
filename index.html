@@ -499,6 +499,12 @@ footer{padding:90px 0 60px;border-top:1px solid var(--line);background:var(--ink
 @media(max-width:760px){.hot{grid-template-columns:1fr}.hot small{display:none}}
 .adtag{position:absolute;left:22px;bottom:14px;font-size:11.5px;font-weight:700;background:#fff;color:#0c0c0d;padding:4px 9px;letter-spacing:.02em}
 .sites-note{font-size:12.5px;color:var(--mute-d);margin:-12px 0 20px}
+.live{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;letter-spacing:.08em;color:#1f8a4c;background:#e8f6ee;border:1px solid #bfe5cf;padding:2px 8px;border-radius:999px;vertical-align:1px}
+.live i{width:7px;height:7px;border-radius:50%;background:#1fae5b;display:inline-block;box-shadow:0 0 0 0 rgba(31,174,91,.6)}
+@media (prefers-reduced-motion:no-preference){.live i{animation:livepulse 1.6s ease-out infinite}}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(31,174,91,.6);opacity:1}70%{box-shadow:0 0 0 7px rgba(31,174,91,0);opacity:.55}100%{box-shadow:0 0 0 0 rgba(31,174,91,0);opacity:1}}
+.live-t{font-size:12.5px;color:inherit}
+.hlive{margin:14px 0 0;font-size:13px;color:#6d6a64}
 /* ── 포털 v2: 밝은 정보 포털 ── */
 body{background:var(--paper);color:var(--ink)}
 header,header.solid{background:rgba(12,12,13,.97)!important;border-color:transparent}
@@ -568,6 +574,7 @@ header .wrap{height:68px}
     </form>
     <div class="hquick"><a href="/map/">분양맵</a><a href="/calendar/">청약캘린더</a><a href="/bunyang/seoul/">서울</a><a href="/bunyang/gyeonggi/">경기</a><a href="/bunyang/incheon/">인천</a><a href="/remain/">무순위·줍줍</a><a href="/news/weekly/">주간 청약 리포트</a><a href="/bunyang/">전국 분양정보</a></div>
     <ul class="hstats"><li><b><!--AUTO:n_total-->622<!--/AUTO:n_total--></b>전국 분양 단지</li><li><b><!--AUTO:n_open-->17<!--/AUTO:n_open--></b>지금 접수중</li><li><b><!--AUTO:n_week-->11<!--/AUTO:n_week--></b>7일 내 접수 예정</li></ul>
+    <p class="hlive"><!--AUTO:live--><!--/AUTO:live--></p>
   </div>
 </section>
 
@@ -1050,6 +1057,7 @@ $("#acsv").addEventListener("click", async () => {
 });
 </script>
 <script src="/assets/match.js" defer></script>
+<script>(function(){document.querySelectorAll('.live[data-ts]').forEach(function(e){var t=new Date(e.dataset.ts),m=Math.round((Date.now()-t)/60000),s;if(isNaN(m))return;s=m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전';var n=e.nextElementSibling;if(n)n.textContent=s+' 업데이트';});})();</script>
 <script>document.querySelectorAll('.ptabs button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.ptabs button').forEach(function(x){x.classList.toggle('on',x===b);document.getElementById(x.dataset.t).hidden=x!==b;});});});</script>
 </body>
 </html>
