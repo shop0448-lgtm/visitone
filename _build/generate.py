@@ -74,8 +74,13 @@ def fetch_models(endpoint, house_id):
 
 def pick(h, *keys):
     for k in keys:
-        if h.get(k): return h[k]
+        if h.get(k): return nd(h[k])
     return ""
+
+def nd(v):
+    """날짜 형식 통일: 20261026 → 2026-10-26 (임의공급·공공지원 민간임대 API는 하이픈 없이 옴)"""
+    v = str(v).strip()
+    return f"{v[:4]}-{v[4:6]}-{v[6:8]}" if re.fullmatch(r"\d{8}", v) else v
 
 def norm(cat, h, models):
     t = []
@@ -507,7 +512,7 @@ function ap(){var n=0;document.querySelectorAll('.drs .dr').forEach(function(li)
 [['fs','s'],['fc','c'],['ft','t']].forEach(function(p){var g=document.getElementById(p[0]);if(!g)return;g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});st[p[1]]=b.dataset.v;ap();});});
 if(qi)qi.addEventListener('input',function(){st.q=qi.value.trim();ap();});window.addEventListener('vo-filter',ap);ap();})();</script><script src="/assets/match.js" defer></script>""" if filters else ""
     body = (f'<header class="ph"><p class="cat">BUNYANG</p><h1>{esc(title)}</h1><p class="lead">{intro}</p></header>{chips}' +
-            ('<div class="fitbar" id="fitbar"><span class="fb-sum"></span><button type="button" class="fb-toggle" hidden>내 조건만 보기</button><button type="button" class="fb-set">내 조건 설정</button></div>' if filters else "") + f'<p class="cntline"><b id="cnt">{len(items)}</b>개 단지 · 데이터 기준일 {updated}</p><ul class="drs">' + "".join(row(h) for h in items) + "</ul>" + js)
+            ('<div class="fitbar" id="fitbar"><span class="fb-sum"></span><button type="button" class="fb-toggle" hidden>내 조건만 보기</button><button type="button" class="fb-set">내 조건 설정</button></div>' if filters else "") + f'<p class="cntline"><b id="cnt">{len(items)}</b>개 단지 · 데이터 기준일 {updated}</p><ul class="drs">' + "".join(row(h) for h in items) + "</ul>" + ("" if items else '<p class="none">현재 이 지역에 진행 중인 분양·청약 단지가 없습니다. <a href="/bunyang/">전국 분양정보</a>에서 다른 지역을 확인해 보세요.</p>') + js)
     ld = [{"@context": "https://schema.org", "@type": "ItemList", "name": title, "numberOfItems": len(items),
            "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate(items[:100])]}]
     return page(ROOT, path, title, desc, body, crumbs, ld, og_type="website", updated=updated)
@@ -760,8 +765,7 @@ def main():
                           "전국 아파트·오피스텔·무순위·민간임대 분양 단지를 지역·유형·청약 상태별로 모았습니다. 매일 청약홈 공공데이터로 업데이트됩니다.",
                           active, [("분양정보", "/bunyang/")], updated), "0.9", "daily"))
     for nm, slug in SIDO:
-        items = [h for h in active if h["sido"] == nm]
-        if not items: continue
+        items = [h for h in active if h["sido"] == nm]   # 진행 단지가 없어도 지역 페이지는 항상 생성(지역별 링크용)
         gen.append((list_page(f"/bunyang/{slug}/", f"{nm} 분양정보", f"{nm} 지역 아파트·오피스텔 분양 단지와 청약 일정 {len(items)}곳. 분양가, 접수일, 당첨 발표일을 한눈에 확인하세요.",
                               f"{nm} 지역의 분양·청약 단지 {len(items)}곳입니다. 청약 일정과 분양가를 확인하고, 관심 단지는 상담을 신청해 보세요.",
                               items, [("분양정보", "/bunyang/"), (nm, f"/bunyang/{slug}/")], updated), "0.8", "daily"))

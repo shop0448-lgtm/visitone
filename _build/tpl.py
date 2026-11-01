@@ -69,7 +69,7 @@ def page(root, path, title, desc, body, crumbs, jsonld, og_type="article", updat
 <footer class="ft"><div class="wrap">
 <div class="ftl"><a class="logo" href="/">{MARK}<b>VISIT ONE</b></a><p>전국 분양정보와 청약 일정 · 제휴 현장 홍보관 방문 예약</p></div>
 <ul><li><a href="/bunyang/">전국 분양정보</a></li><li><a href="/map/">분양맵</a></li><li><a href="/calendar/">청약캘린더</a></li><li><a href="/remain/">무순위·잔여세대</a></li><li><a href="/glossary/">부동산 용어사전</a></li><li><a href="/service/">서비스 소개</a></li><li><a href="/partner/">현장 입점·제휴 문의</a></li><li><a href="/about/">회사 소개</a></li><li><a href="/privacy/"><b>개인정보처리방침</b></a></li></ul>
-<p class="disc">{BIZ}<br><br>분양정보는 한국부동산원 청약홈 공공데이터를 기반으로 하며, 실제 청약 시에는 반드시 청약홈의 입주자모집공고를 확인하세요. 본 사이트는 각 단지의 공식 홈페이지가 아닙니다.{(" 데이터 기준일 " + updated + ".") if updated else ""}</p>
+<p class="disc">{BIZ}<br><br>분양·청약 일정 정보는 한국부동산원 청약홈 공공데이터를 바탕으로 하며, 실제 청약 전에는 반드시 입주자모집공고를 확인하세요. 본 사이트는 각 단지의 공식 홈페이지가 아니며, VISIT ONE은 해당 단지의 분양 사업 주체나 대행사가 아닙니다. ‘VISIT ONE 제휴 현장’으로 표시된 현장은 사업 주체가 제공한 자료를 바탕으로 한 광고이며, VISIT ONE은 해당 현장으로부터 소정의 수수료를 받습니다.{(" 데이터 기준일 " + updated + ".") if updated else ""}</p>
 </div></footer>
 </body>
 </html>
