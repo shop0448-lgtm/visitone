@@ -22,17 +22,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: 수집 데이터 캐시 불러오기
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/trades.json
+            data/silv.json
+            data/cache.json
+          key: visitone-data-${{ github.run_id }}
+          restore-keys: visitone-data-
       - name: 청약홈 데이터로 페이지 생성
         env:
           APPLYHOME_KEY: ${{ secrets.APPLYHOME_KEY }}
           KAKAO_REST_KEY: ${{ secrets.KAKAO_REST_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           TZ: Asia/Seoul
         run: python _build/generate.py
       - name: 변경사항 저장
         run: |
           git config user.name "visitone-bot"
           git config user.email "visitone-bot@users.noreply.github.com"
-          git add -A
+          git rm -r --cached --ignore-unmatch -q data/trades.json data/silv.json data/cache.json
+          git add -A -- . ':!data/trades.json' ':!data/silv.json' ':!data/cache.json'
           if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
           git commit -m "분양정보 자동 업데이트 $(TZ=Asia/Seoul date +%F)"
           git pull --rebase -X theirs origin main || true
