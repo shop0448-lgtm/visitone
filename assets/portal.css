@@ -204,3 +204,15 @@ main.wrap.pw{max-width:1080px}
 .calb.ics{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
 .calb:hover{border-color:var(--gold)}
 .sc-img .adb{position:absolute;left:10px;bottom:10px;background:#fff;color:#0c0c0d;font-size:11px;font-weight:700;padding:3px 8px}
+/* 실거래가 비교 */
+.dt.mk td small{display:block;font-size:11.5px;color:var(--mute)}
+.mk-lo,.mk-hi,.mk-eq{font-size:12px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap}
+.mk-lo{background:#e8f4ec;color:#1f6b3a}.mk-hi{background:#fbecea;color:#b0392b}.mk-eq{background:#eeece7;color:#5f5c56}
+/* 주간 리포트 · 정책 */
+.wk-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin:18px 0 8px}
+.wk-kpi div{background:#fff;padding:16px;text-align:center}.wk-kpi b{display:block;font-size:28px;color:var(--ink)}.wk-kpi small{color:var(--mute);font-size:12.5px}
+.weekly h2{margin-top:36px}
+.wk-pol li{margin:6px 0}.wk-pol small{color:var(--mute)}
+.polbody p{margin:0 0 12px;line-height:1.85}.polbody table{border-collapse:collapse;margin:12px 0;font-size:14px}.polbody td,.polbody th{border:1px solid var(--line);padding:6px 8px}
+h2.nh{display:flex;justify-content:space-between;align-items:baseline;margin-top:40px}h2.nh a{font-size:13px;font-weight:400;color:var(--gold-d)}
+@media(max-width:640px){.wk-kpi{grid-template-columns:repeat(2,1fr)}}

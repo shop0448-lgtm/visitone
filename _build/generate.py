@@ -393,6 +393,10 @@ var b=new URLSearchParams();b.append('{GFE["site"]}','[청약알림] {nm}');b.ap
 b.append('{GFE["kind"]}','{h["id"]} · {esc(h["sido"])}');b.append('{GFE["memo"]}','알림: '+(al||'-')+' / 발표 {esc(h["win"] or "-")} / 제휴현장 안내 동의: '+(document.getElementById('c_mkt').checked?'Y':'N'));
 fetch('{GF}',{{method:'POST',mode:'no-cors',body:b}}).then(function(){{f.querySelector('.pbtn').disabled=true;document.getElementById('c_ok').hidden=false;}}).catch(function(){{document.getElementById('c_err').textContent='전송에 실패했습니다. 잠시 후 다시 시도해 주세요.';document.getElementById('c_err').hidden=false;}});}});}})();</script></section>"""
 
+def mkt_html(h):
+    import extras
+    return extras.mkt_box(h)
+
 def price_box(h):
     pp = ppy_of(h)
     if not pp: return ""
@@ -481,7 +485,7 @@ def danji_page(h, all_h, updated):
 </tbody></table>
 <h2>타입별 공급 정보</h2>{ttable}
 {cmp_box(h)}
-{price_box(h)}{sp_box(h)}
+{price_box(h)}{mkt_html(h)}{sp_box(h)}
 <h2>단지 정보</h2><table class="tbl"><tbody>{info_html}</tbody></table>
 {consult_form(h)}
 {faq_html}
@@ -757,6 +761,11 @@ def main():
     os.makedirs(os.path.join(ROOT, "data"), exist_ok=True)
     for sub in ("danji", "bunyang", "remain", "calendar"):
         shutil.rmtree(os.path.join(ROOT, sub), ignore_errors=True)
+    import extras
+    extras.init(sys.modules[__name__])
+    geo = geocode_all(all_h)
+    try: extras.market_compare(all_h, geo, TODAY)
+    except Exception as e: print("market error", e)
     gen = []
     for h in all_h:
         gen.append((danji_page(h, all_h, updated), "0.6", "weekly"))
@@ -775,7 +784,7 @@ def main():
                           rem, [("무순위·잔여세대", "/remain/")], updated), "0.8", "daily"))
     gen.append((calendar_page(all_h, updated), "0.9", "daily"))
     inject_home(all_h, updated)
-    geo = geocode_all(all_h)
+    gen += extras.run(all_h, geo, updated)
     export_json(all_h, updated, geo)
     gen.append((map_page(updated), "0.8", "daily"))
     gen += make_aliases()
