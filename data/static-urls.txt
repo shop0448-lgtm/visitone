@@ -44,10 +44,15 @@
 /glossary/gtx/|0.6|monthly
 /glossary/yebi-tadangseong/|0.6|monthly
 /glossary/|0.8|monthly
-/guide/jiyeok-jutaek-johap-checklist/|0.7|monthly
+/guide/cheongyak-1st-priority/|0.7|monthly
+/guide/cheongyak-gajeom-calc/|0.7|monthly
+/guide/special-supply-types/|0.7|monthly
+/guide/bunyang-types/|0.7|monthly
+/guide/payment-schedule/|0.7|monthly
+/guide/after-winning/|0.7|monthly
 /guide/model-house-visit/|0.7|monthly
 /guide/apartment-area-guide/|0.7|monthly
-/guide/johap-vs-cheongyak/|0.7|monthly
+/guide/jiyeok-jutaek-johap-checklist/|0.7|monthly
 /guide/|0.8|monthly
 /area/dongdaemun/|0.8|monthly
 /about/|0.5|monthly
