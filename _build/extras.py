@@ -172,7 +172,7 @@ def fetch_policy(today):
         # 최근 400건만 유지
         db = dict(sorted(db.items(), key=lambda kv: kv[1]["date"], reverse=True)[:400])
         _save("policy.json", db)
-    return sorted([x for x in db.values() if POL_RE.search(x["title"] + " " + (x.get("sub") or ""))], key=lambda x: (x["date"], x["id"]), reverse=True)
+    return sorted([x for x in db.values() if POL_RE.search(x["title"] + " " + (x.get("sub") or "")) and not (re.search(r"산업단지|산단", x["title"]) and not re.search(r"주택|아파트|분양|주거", x["title"]))], key=lambda x: (x["date"], x["id"]), reverse=True)
 
 def clean_body(htm):
     htm = re.sub(r"(?is)<(script|style|iframe)[^>]*>.*?</\1>", "", htm or "")
@@ -450,6 +450,12 @@ def pre_box(h):
 
 # ═════════════════════════ 7) 분양 뉴스 (NAVER API HUB) ═════════════════════════
 NAVER = "https://naverapihub.apigw.ntruss.com/search/v1/"
+STOCK_RE = re.compile(r"IPO|공모주|공모가|상장|수요예측|코스닥|코스피|증권신고|유상증자|새내기주|청약증거금")
+HOUSE_RE = re.compile(r"아파트|주택|가구|세대|분양|단지|오피스텔|임대|재건축|재개발|입주|부동산")
+def is_housing(x):
+    t = (x.get("title") or "") + " " + (x.get("desc") or "")
+    return not STOCK_RE.search(t) or bool(HOUSE_RE.search(x.get("title") or ""))
+
 PRESS_Q = ["아파트 분양", "청약 일정", "무순위 청약", "분양가", "견본주택 개관", "민간임대 아파트", "분양권 전매"]
 OUTLET = {"chosun": "조선일보", "joongang": "중앙일보", "donga": "동아일보", "hani": "한겨레", "khan": "경향신문", "mk.co.kr": "매일경제",
           "hankyung": "한국경제", "sedaily": "서울경제", "mt.co.kr": "머니투데이", "edaily": "이데일리", "fnnews": "파이낸셜뉴스", "asiae": "아시아경제",
@@ -499,7 +505,7 @@ def fetch_press(all_h):
             db["blog"][h["id"]] = dict(at=today, items=[dict(title=strip_tags(x.get("title")), url=x.get("link"), name=strip_tags(x.get("bloggername")),
                                                              date=x.get("postdate", "")) for x in items])
             time.sleep(0.1)
-        news = sorted(db["news"].values(), key=lambda x: x["date"], reverse=True)[:400]
+        news = sorted([x for x in db["news"].values() if is_housing(x)], key=lambda x: x["date"], reverse=True)[:400]
         db["news"] = {x["url"]: x for x in news}
         _save("press.json", db)
     return db

@@ -455,6 +455,24 @@ def sp_box(h):
     trs = "".join(f'<tr><td><b>{esc(t["label"])}</b></td>' + "".join(cell(t, k) for k in keys) + f'<td><b>{t.get("sps", 0)}</b></td><td>{t.get("gen", 0)}</td></tr>' for t in h["types"])
     return f'<h2>특별공급 유형별 세대수</h2><div class="tw"><table class="tbl dt sp"><thead><tr><th>타입</th>{head}<th>특공 계</th><th>일반공급</th></tr></thead><tbody>{trs}</tbody></table></div>'
 
+GEO = {}
+
+def dmap_html(h):
+    g = GEO.get(h["id"])
+    if not g: return ""
+    y, x = g[0], g[1]
+    note = {"addr": "", "kw": " (단지명 검색 기준 위치)"}.get(g[2], " (대략적 위치 · 읍·면·동 기준)")
+    lvl = 4 if g[2] in ("addr", "kw") else 6
+    return (f'<h2>위치</h2><div id="dmap" class="dmap" data-y="{y}" data-x="{x}" data-n="{esc(h["name"])}"></div>'
+            f'<p class="muted">{esc(h["addr"])}{note} · <a href="https://map.kakao.com/link/map/{urllib.parse.quote(h["name"])},{y},{x}" target="_blank" rel="noopener">카카오맵에서 크게 보기 →</a> · <a href="/map/?id={h["id"]}">주변 분양 단지 보기 →</a></p>'
+            '<script>(function(){var el=document.getElementById("dmap");if(!el)return;function go(){var s=document.createElement("script");'
+            f's.src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_JS}&autoload=false";'
+            's.onload=function(){kakao.maps.load(function(){var ll=new kakao.maps.LatLng(+el.dataset.y,+el.dataset.x);'
+            f'var m=new kakao.maps.Map(el,{{center:ll,level:{lvl}}});'
+            'm.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);'
+            'new kakao.maps.Marker({map:m,position:ll,title:el.dataset.n});m.setZoomable(false);});};document.head.appendChild(s);}'
+            'if("IntersectionObserver"in window){var o=new IntersectionObserver(function(e){if(e[0].isIntersecting){o.disconnect();go();}},{rootMargin:"300px"});o.observe(el);}else go();})();</script>')
+
 def danji_page(h, all_h, updated):
     st, st_txt = status(h)
     steps = [("모집공고", h["notice"]), ("특별공급", h["sp_b"]), ("청약 접수", h["r_b"]), ("당첨 발표", h["win"]), ("계약", h["c_b"])]
@@ -495,6 +513,7 @@ def danji_page(h, all_h, updated):
 {cmp_box(h)}
 {price_box(h)}{mkt_html(h)}{pre_html(h)}{sp_box(h)}
 <h2>단지 정보</h2><table class="tbl"><tbody>{info_html}</tbody></table>
+{dmap_html(h)}
 {consult_form(h)}
 {press_html(h)}
 {faq_html}
@@ -788,6 +807,7 @@ def main():
     import extras
     extras.init(sys.modules[__name__])
     geo = geocode_all(all_h)
+    GEO.update({k: v for k, v in geo.items() if v})
     extras.before_pages(all_h, geo, TODAY)
     gen = []
     for h in all_h:
