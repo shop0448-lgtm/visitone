@@ -521,7 +521,7 @@ def danji_page(h, all_h, updated):
             ]
     info_html = "".join(f"<tr><th>{k}</th><td>{esc(v)}" + (f' <a class="onmap" href="/map/?id={h["id"]}">지도에서 보기 →</a>' if k == "공급 위치" else "") + "</td></tr>" for k, v in info if v and v.strip() not in ("", "-"))
     links = []
-    if h["url"]: links.append(f'<a class="lb" href="{esc(h["url"])}" target="_blank" rel="noopener nofollow">청약홈 입주자모집공고 보기 →</a>')
+    if h["url"]: links.append(f'<a class="lb" href="{esc(h["url"])}" rel="nofollow">청약홈 입주자모집공고 보기 →</a>')
     same = [x for x in all_h if x["sido"] == h["sido"] and x["id"] != h["id"]][:6]
     rel = ('<h2>같은 지역 분양 단지</h2><ul class="drs">' + "".join(row(x) for x in same) + f'</ul><p><a href="/bunyang/{SIDO_SLUG.get(h["sido"], "")}/">{esc(h["sido"])} 분양 전체 보기 →</a></p>') if same else ""
     fq = faq(h)
@@ -550,6 +550,7 @@ def danji_page(h, all_h, updated):
 {consult_form(h)}
 {press_html(h)}
 {faq_html}
+{__import__('extras').kw_links(h, all_h)}
 {rel}
 <p class="muted src">출처: 한국부동산원 청약홈 분양정보(공공데이터). 데이터 기준일 {updated}. 본 페이지는 정보 제공용이며 해당 단지의 공식 홈페이지가 아닙니다. 청약 전 반드시 청약홈의 입주자모집공고를 확인하세요.</p>
 </article>"""
@@ -646,7 +647,7 @@ document.querySelectorAll('.cc:not(.empty)').forEach(function(c){c.addEventListe
 (function(){var first=document.querySelector('.cday:not(.past)');if(first){var ds=first.id.slice(1),c=[].find.call(document.querySelectorAll('.cd'),function(a){return a.getAttribute('href')==='#d'+ds&&!a.closest('.cal').hidden;});showDay(ds,c?c.parentNode:null);}})();
 var on={};document.querySelectorAll('.legend button').forEach(function(b){on[b.dataset.k]=true;b.addEventListener('click',function(){on[b.dataset.k]=!on[b.dataset.k];b.classList.toggle('off',!on[b.dataset.k]);
 document.querySelectorAll('.ce').forEach(function(e){var k=e.className.match(/ce-(\\S+)/)[1];e.hidden=!on[k];});document.querySelectorAll('.cday li').forEach(function(li){var k=li.querySelector('.ek').className.match(/ek-(\\S+)/)[1];li.hidden=!on[k];});});});})();</script>"""
-    body = (f'<header class="ph"><p class="cat">CALENDAR</p><h1>청약캘린더</h1><p class="lead">이번 달과 다음 달의 특별공급·청약 접수·당첨 발표·계약 일정을 달력으로 확인하세요. 단지명을 누르면 상세 정보로 이동합니다.</p></header>'
+    body = (f'<header class="ph"><p class="cat">CALENDAR</p><h1>청약캘린더</h1><p class="lead">이번 달과 다음 달의 특별공급·청약 접수·당첨 발표·계약 일정을 달력으로 확인하세요. 단지명을 누르면 상세 정보로 이동합니다.</p></header>' + __import__('extras').month_links(all_h) + ''
             f'<div class="calbar"><div class="mtabs">{tabs}</div><div class="legend"><button type="button" data-k="특별공급" class="ek ek-특별공급">특별공급</button><button type="button" data-k="청약" class="ek ek-청약">청약 접수</button><button type="button" data-k="당첨" class="ek ek-당첨">당첨 발표</button><button type="button" data-k="계약" class="ek ek-계약">계약 시작</button></div></div>'
             + "".join(grids) + '<div class="dayp" id="dayp" aria-live="polite"></div><h2 class="clh">날짜별 일정</h2>' + ("".join(blocks) or '<p class="muted">예정된 일정이 없습니다.</p>') + f'<p class="muted">{live_now("출처 한국부동산원 청약홈")}</p>' + LIVEJS() + js)
     return page(ROOT, "/calendar/", "청약캘린더 · 이번 달 청약 일정", "이번 달과 다음 달의 청약 접수, 특별공급, 당첨자 발표, 계약 일정을 달력으로 한눈에. 전국 아파트·오피스텔·무순위 청약 일정을 매일 업데이트합니다.",

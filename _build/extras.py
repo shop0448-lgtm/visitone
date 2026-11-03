@@ -619,17 +619,27 @@ BRANDS = [("자이", ["자이"], "GS건설"), ("힐스테이트", ["힐스테이
           ("어울림", ["어울림"], "금호건설"), ("센트레빌", ["센트레빌"], "동부건설"), ("하늘채", ["하늘채"], "코오롱글로벌"),
           ("데시앙", ["데시앙"], "태영건설"), ("예미지", ["예미지"], "금성백조"), ("우미린", ["우미린"], "우미건설"),
           ("디에이치", ["디에이치"], "현대건설"), ("아크로", ["아크로"], "DL이앤씨"), ("르엘", ["르엘"], "롯데건설"), ("스위첸", ["스위첸"], "KCC건설")]
-TYPE_KW = [("아파트", "A", "아파트 분양", "민영·공공 아파트 일반분양"), ("오피스텔", "O", "오피스텔·도시형생활주택 분양", "오피스텔과 도시형생활주택"),
+TYPE_KW = [("아파트", "A", "아파트", "민영·공공 아파트 일반분양"), ("오피스텔", "O", "오피스텔·도시형생활주택", "오피스텔과 도시형생활주택"),
            ("민간임대", "P", "민간임대 아파트", "공공지원·장기일반 민간임대 아파트"), ("무순위-줍줍", "R", "무순위 청약(줍줍)", "무순위·잔여세대·계약취소주택 재공급"),
            ("임의공급", "T", "임의공급 아파트", "청약 미달 후 사업주체가 선착순 등으로 공급하는 임의공급")]
 
 def _q(p): return urllib.parse.quote(p)
 
+_KO_PREFIX = {"/분양/": _q("/분양/"), "/브랜드/": _q("/브랜드/"), "/청약일정/": _q("/청약일정/")}
+def fixhref(t):
+    for a, b in _KO_PREFIX.items(): t = t.replace('href="' + a, 'href="' + b)
+    return t
+
+def _month_ok(ym):
+    t = G.TODAY
+    lo = (t.year, t.month - 2) if t.month > 2 else (t.year - 1, t.month + 10)
+    return ym >= lo
+
 def kpage(path, title, desc, body, crumbs, ld, updated):
     """한글 경로 페이지 생성 후 canonical·og:url·breadcrumb URL을 퍼센트 인코딩으로 정리"""
     G.page(G.ROOT, path, title, desc, body, crumbs, ld, og_type="website", updated=updated)
     f = os.path.join(G.ROOT, path.strip("/"), "index.html")
-    t = open(f, encoding="utf-8").read()
+    t = fixhref(open(f, encoding="utf-8").read())
     for _, h in crumbs + [("", path)]:
         if any(ord(c) > 127 for c in h): t = t.replace(G.SITE + h + '"', G.SITE + _q(h) + '"')
     open(f, "w", encoding="utf-8").write(t)
@@ -642,7 +652,7 @@ def sgg_of(h):
 def _stats(items):
     live = [h for h in items if G.status(h)[0] != "마감"]
     done = [h for h in items if G.status(h)[0] == "마감" and h.get("rate_all") and h["cat"] != "R"] or [h for h in items if G.status(h)[0] == "마감" and h.get("rate_all")]
-    nxt = sorted([h for h in live if (h["sp_b"] or h["r_b"])], key=lambda h: h["sp_b"] or h["r_b"])
+    nxt = sorted([h for h in live if G.d(h["sp_b"] or h["r_b"]) and G.d(h["sp_b"] or h["r_b"]) >= G.TODAY], key=lambda h: h["sp_b"] or h["r_b"])
     top = max(done, key=lambda h: h["rate_all"]) if done else None
     rs = sorted(h["rate_all"] for h in done)
     avg = (round(rs[len(rs) // 2], 1) if len(rs) % 2 else round((rs[len(rs) // 2 - 1] + rs[len(rs) // 2]) / 2, 1)) if rs else None
@@ -652,9 +662,9 @@ def _stats(items):
 def kw_body(kw, intro, items, related, updated, faq_extra=None):
     live, done, nxt, top, avg, units = _stats(items)
     sm = [f"{kw} 관련 분양 단지는 최근 기준 {len(items)}곳, 총 {units:,}세대이며 이 중 {len(live)}곳이 청약 예정·진행 중입니다."]
-    if nxt: sm.append(f"가장 가까운 청약은 {nxt[0]['name']}({G.kdate(nxt[0]['sp_b'] or nxt[0]['r_b'])} 접수)입니다.")
+    if nxt: sm.append(f"다음 청약은 {nxt[0]['name']}({G.kdate(nxt[0]['sp_b'] or nxt[0]['r_b'])} 접수)입니다.")
     if top: sm.append(f"최근 마감 단지 경쟁률 중간값은 {avg}:1이고, 가장 높았던 곳은 {top['name']}({G.cr_txt(top['rate_all'])})입니다.")
-    faq = [(f"{kw} 지금 청약할 수 있는 곳은?", (", ".join(f"{h['name']}({G.kdate(h['sp_b'] or h['r_b'])})" for h in nxt[:5]) + " 등이 접수 예정·진행 중입니다.") if nxt else "현재 접수 예정인 단지가 없습니다. 새 공고가 나오면 매일 자동으로 이 페이지에 추가됩니다."),
+    faq = [(f"{kw} 앞으로 청약할 수 있는 곳은?", (", ".join(f"{h['name']}({G.kdate(h['sp_b'] or h['r_b'])})" for h in nxt[:5]) + " 등이 접수 예정·진행 중입니다.") if nxt else "현재 접수 예정인 단지가 없습니다. 새 공고가 나오면 매일 자동으로 이 페이지에 추가됩니다."),
            (f"{kw} 경쟁률은 어느 정도인가요?", f"최근 마감된 {len(done)}개 단지의 경쟁률 중간값은 {avg}:1입니다. 최고는 {top['name']}({G.cr_txt(top['rate_all'])})였습니다." if top else "아직 경쟁률이 집계된 마감 단지가 없습니다.")] + (faq_extra or [])
     rows_live = "".join(G.row(h) for h in sorted(live, key=lambda h: h["sp_b"] or h["r_b"] or "9"))
     rows_done = "".join(G.row(h) for h in sorted([h for h in items if G.status(h)[0] == "마감"], key=lambda h: h["sp_b"] or h["r_b"] or "", reverse=True)[:30])
@@ -711,8 +721,8 @@ def keyword_pages(all_h, updated):
         if x: months.setdefault((x.year, x.month), []).append(h)
     mlist = sorted(months)
     for (y, m) in mlist:
-        if (y, m) < ((G.TODAY.year, G.TODAY.month - 2) if G.TODAY.month > 2 else (G.TODAY.year - 1, G.TODAY.month + 10)): continue
-        rel = [(f"{y2}년 {m2}월 청약 일정", f"/청약일정/{_q(f'{y2}년-{m2}월')}/") for (y2, m2) in mlist if (y2, m2) != (y, m)][-5:]
+        if not _month_ok((y, m)): continue
+        rel = [(f"{y2}년 {m2}월 청약 일정", f"/청약일정/{_q(f'{y2}년-{m2}월')}/") for (y2, m2) in mlist if (y2, m2) != (y, m) and _month_ok((y2, m2)) and len(months[(y2, m2)]) >= 2][-5:]
         mk("월별", f"{y}년 {m}월 청약", f"/청약일정/{y}년-{m}월/", f"{y}년 {m}월에 청약 접수하는 전국 아파트·오피스텔·무순위·민간임대 단지를 접수일 순으로 정리했습니다.",
            months[(y, m)], [("청약캘린더", "/calendar/"), (f"{y}년 {m}월", f"/청약일정/{y}년-{m}월/")], [("청약캘린더", "/calendar/"), ("주간 청약 리포트", "/news/weekly/")] + rel,
            title=f"{y}년 {m}월 청약 일정 | 이번 달 아파트 청약·분양 일정", prio="0.8")
@@ -720,7 +730,7 @@ def keyword_pages(all_h, updated):
     for name, keys, comp in BRANDS:
         items = [h for h in all_h if any(k.lower() in h["name"].lower() for k in keys)]
         mk("브랜드", name, f"/브랜드/{name}/", f"{name}({comp}) 아파트의 분양 일정, 청약 경쟁률, 분양가를 모았습니다.", items,
-           [("분양정보", "/bunyang/"), (name, f"/브랜드/{name}/")], [(f"{n2} 분양", f"/브랜드/{_q(n2)}/") for n2, _, _ in BRANDS if n2 != name][:12],
+           [("분양정보", "/bunyang/"), (name, f"/브랜드/{name}/")], [(f"{n2} 분양", f"/브랜드/{_q(n2)}/") for n2, k2, _ in BRANDS if n2 != name and sum(1 for x in all_h if any(k.lower() in x["name"].lower() for k in k2)) >= 2][:12],
            title=f"{name} 분양 일정·청약 경쟁률 {yr} | {comp}",
            faq_extra=[(f"{name}는 어느 건설사 브랜드인가요?", f"{name}는 {comp}의 아파트 브랜드입니다. 같은 브랜드라도 단지마다 시행사·시공 참여사가 다를 수 있으니 공고문을 확인하세요.")])
     # 5) 주제
@@ -746,4 +756,42 @@ def sgg_chips(sido, all_h):
         if h["sido"] == sido and sgg_of(h): c[sgg_of(h)] = c.get(sgg_of(h), 0) + 1
     xs = [(s, n) for s, n in sorted(c.items(), key=lambda kv: -kv[1]) if n >= 2]
     if not xs: return ""
-    return '<span class="kwl kwl-in">' + "".join(f'<a href="/분양/{_q(sido + "-" + s)}/">{esc(s)} <i>{n}</i></a>' for s, n in xs) + "</span>"
+    return fixhref('<span class="kwl kwl-in">' + "".join(f'<a href="/분양/{_q(sido + "-" + s)}/">{esc(s)} <i>{n}</i></a>' for s, n in xs) + "</span>")
+
+_KWC = {}
+def _kw_counts(all_h):
+    if _KWC.get("n") == len(all_h): return _KWC
+    c = {"n": len(all_h), "sgg": {}, "type": {}, "st": {}, "brand": {}, "month": {}}
+    for h in all_h:
+        if sgg_of(h): c["sgg"][(h["sido"], sgg_of(h))] = c["sgg"].get((h["sido"], sgg_of(h)), 0) + 1
+        c["type"][h["cat"]] = c["type"].get(h["cat"], 0) + 1
+        c["st"][(h["sido"], h["cat"])] = c["st"].get((h["sido"], h["cat"]), 0) + 1
+        for name, keys, _ in BRANDS:
+            if any(k.lower() in h["name"].lower() for k in keys): c["brand"][name] = c["brand"].get(name, 0) + 1
+        x = G.d(h["sp_b"] or h["r_b"])
+        if x: c["month"][(x.year, x.month)] = c["month"].get((x.year, x.month), 0) + 1
+    _KWC.clear(); _KWC.update(c); return _KWC
+
+def kw_links(h, all_h):
+    """단지 페이지 → 해당 키워드 페이지 내부 링크"""
+    c = _kw_counts(all_h); L = []
+    sg = sgg_of(h)
+    if sg and c["sgg"].get((h["sido"], sg), 0) >= 2: L.append((f"{h['sido']} {sg} 분양", f"/분양/{_q(h['sido'] + '-' + sg)}/"))
+    for slug, cat, kw, _ in TYPE_KW:
+        if cat == h["cat"]:
+            if c["st"].get((h["sido"], cat), 0) >= 2: L.append((f"{h['sido']} {kw}", f"/분양/{_q(h['sido'] + '-' + slug)}/"))
+            if c["type"].get(cat, 0) >= 2: L.append((f"전국 {kw}", f"/분양/{_q(slug)}/"))
+    for name, keys, _ in BRANDS:
+        if any(k.lower() in h["name"].lower() for k in keys) and c["brand"].get(name, 0) >= 2:
+            L.append((f"{name} 분양", f"/브랜드/{_q(name)}/")); break
+    x = G.d(h["sp_b"] or h["r_b"])
+    if x and _month_ok((x.year, x.month)) and c["month"].get((x.year, x.month), 0) >= 2: L.append((f"{x.year}년 {x.month}월 청약 일정", f"/청약일정/{_q(f'{x.year}년-{x.month}월')}/"))
+    if h.get("cap"): L.append(("분양가상한제 아파트", f"/분양/{_q('분양가상한제')}/"))
+    if not L: return ""
+    return fixhref('<h2>관련 키워드</h2><div class="kwl">' + "".join(f'<a href="{u}">{esc(n)}</a>' for n, u in L) + '<a href="/keywords/">키워드 전체 →</a></div>')
+
+def month_links(all_h):
+    c = _kw_counts(all_h)
+    ms = sorted(k for k, v in c["month"].items() if v >= 2 and _month_ok(k))[-5:]
+    if not ms: return ""
+    return fixhref('<div class="kwl">' + "".join(f'<a href="/청약일정/{_q(f"{y}년-{m}월")}/">{y}년 {m}월 청약 일정</a>' for y, m in ms) + '<a href="/keywords/">분양 키워드 전체 →</a></div>')
