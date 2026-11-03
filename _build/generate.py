@@ -564,7 +564,8 @@ def danji_page(h, all_h, updated):
                "dateModified": updated, "inLanguage": "ko-KR", "abstract": " ".join(facts(h)),
                "isPartOf": {"@type": "WebSite", "name": "VISIT ONE 비지트원", "url": SITE + "/"},
                "publisher": {"@type": "Organization", "name": "VISIT ONE", "alternateName": "비지트원", "url": SITE + "/"},
-               "isBasedOn": {"@type": "Dataset", "name": "한국부동산원 청약홈 분양정보", "url": "https://www.applyhome.co.kr"}})
+               "isBasedOn": {"@type": "CreativeWork", "name": "한국부동산원 청약홈 분양정보(공공데이터)", "url": "https://www.applyhome.co.kr",
+                             "description": "한국부동산원 청약홈이 공개하는 아파트·오피스텔·무순위 분양 공고와 청약 경쟁률 공공데이터"}})
     if fq: ld.append({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in fq]})
     sl = SIDO_SLUG.get(h["sido"], "")
     crumbs = [("분양정보", "/bunyang/")] + ([(h["sido"], f"/bunyang/{sl}/")] if sl else []) + [(h["name"], f"/danji/{h['id']}/")]
