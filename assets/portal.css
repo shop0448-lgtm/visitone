@@ -255,3 +255,4 @@ h2.nh{display:flex;justify-content:space-between;align-items:baseline;margin-top
 .sum h2{font-size:17px;margin:0 0 8px}
 .sum ul{margin:0;padding-left:18px;line-height:1.75}
 .sum li{margin:2px 0}
+.kwl{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 22px}.kwl a{border:1px solid #e3dccd;background:#fff;border-radius:999px;padding:7px 13px;font-size:14px;color:#1a1814;text-decoration:none}.kwl a:hover{border-color:#c9aa70}.kwl i{font-style:normal;color:#8a6d38;font-size:12px;margin-left:2px}.kwl-in{margin:14px 0 0}

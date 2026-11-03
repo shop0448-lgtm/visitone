@@ -859,7 +859,7 @@ def main():
     for nm, slug in SIDO:
         items = [h for h in active if h["sido"] == nm]   # 진행 단지가 없어도 지역 페이지는 항상 생성(지역별 링크용)
         gen.append((list_page(f"/bunyang/{slug}/", f"{nm} 분양정보", f"{nm} 지역 아파트·오피스텔 분양 단지와 청약 일정 {len(items)}곳. 분양가, 접수일, 당첨 발표일을 한눈에 확인하세요.",
-                              f"{nm} 지역의 분양·청약 단지 {len(items)}곳입니다. 청약 일정과 분양가를 확인하고, 관심 단지는 상담을 신청해 보세요.",
+                              f"{nm} 지역의 분양·청약 단지 {len(items)}곳입니다. 청약 일정과 분양가를 확인하고, 관심 단지는 청약 알림을 신청해 보세요." + extras.sgg_chips(nm, all_h),
                               items, [("분양정보", "/bunyang/"), (nm, f"/bunyang/{slug}/")], updated), "0.8", "daily"))
     rem = [h for h in active if h["cat"] == "R"]
     gen.append((list_page("/remain/", "무순위·잔여세대 청약", "무순위 청약, 잔여세대, 계약취소주택 재공급 정보를 모았습니다. 청약통장 없이 신청 가능한 줍줍 물량을 확인하세요.",
