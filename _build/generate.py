@@ -457,6 +457,38 @@ def sp_box(h):
 
 GEO = {}
 
+def min_score(h):
+    lows = []
+    for c in h.get("cmp") or []:
+        sc = (c.get("score") or {}).get("해당지역") or next(iter((c.get("score") or {}).values()), None)
+        try:
+            if sc and float(sc[0]) > 0: lows.append(float(sc[0]))
+        except Exception: pass
+    return min(lows) if lows else None
+
+def facts(h):
+    """AI 검색·요약용 핵심 사실 문장 (페이지 상단 '한눈에 보기'와 llms-full.txt 공용)"""
+    st, st_txt = status(h)
+    f = [f'{h["name"]}: {h["addr"]}에 공급되는 {cat_label(h)} {h["units"]:,}세대입니다.']
+    pr = price_range(h)
+    if pr: f.append(f"타입별 최고 분양가는 {pr}입니다.")
+    sched = []
+    if h["sp_b"]: sched.append(f'특별공급 {h["sp_b"]}')
+    if h["r_b"]: sched.append(f'{"일반공급 " if h["cat"] == "A" else "청약 "}{h["r_b"]}' + (f' ~ {h["r_e"]}' if h["r_e"] and h["r_e"] != h["r_b"] else ""))
+    if h["win"]: sched.append(f'당첨자 발표 {h["win"]}')
+    if h["c_b"]: sched.append(f'계약 {h["c_b"]}')
+    if sched: f.append("일정: " + ", ".join(sched) + f" (현재 상태: {st_txt}).")
+    if h.get("rate_all"): f.append(f'{"1순위 " if h["cat"] == "A" else ""}평균 청약 경쟁률은 {cr_txt(h["rate_all"])}입니다.')
+    ms = min_score(h)
+    if ms: f.append(f"해당지역 당첨 최저 가점은 {ms:g}점입니다.")
+    who = [x for x in (h["cnst"] and f'시공 {h["cnst"]}', h["bsns"] and f'시행 {h["bsns"]}') if x]
+    if who: f.append(" · ".join(who) + ".")
+    return f
+
+def facts_box(h, updated):
+    return ('<section class="sum" aria-label="한눈에 보기"><h2>한눈에 보기</h2><ul>' + "".join(f"<li>{esc(x)}</li>" for x in facts(h))
+            + f'</ul><p class="muted">출처: 한국부동산원 청약홈 공공데이터 · 기준일 {updated}</p></section>')
+
 def dmap_html(h):
     g = GEO.get(h["id"])
     if not g: return ""
@@ -501,6 +533,7 @@ def danji_page(h, all_h, updated):
 <h1>{esc(h["name"])}</h1><p class="lead">{lead}</p>
 <div class="kf"><div><small>공급 세대</small><b>{h["units"]:,}세대</b></div><div><small>청약 접수</small><b>{kdate(h["sp_b"] or h["r_b"])}</b></div><div><small>당첨 발표</small><b>{kdate(h["win"])}</b></div><div><small>분양가</small><b>{esc(pr) if pr else "공고 확인"}</b></div></div>
 <div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">{"새 분양 알림 받기" if st == "마감" else "청약 알림 받기"}</a></div></div>
+{facts_box(h, updated)}
 <h2>청약 일정</h2><ol class="tline">{tl}</ol>
 <table class="tbl sched"><tbody>
 <tr><th>입주자모집공고</th><td>{esc(h["notice"])}</td></tr>
@@ -524,6 +557,13 @@ def danji_page(h, all_h, updated):
     ld = [{"@context": "https://schema.org", "@type": "ApartmentComplex", "name": h["name"], "url": f"{SITE}/danji/{h['id']}/",
            "description": desc, "numberOfAccommodationUnits": h["units"],
            "address": {"@type": "PostalAddress", "streetAddress": h["addr"], "addressRegion": h["sido"], "addressCountry": "KR"}}]
+    g = GEO.get(h["id"])
+    if g: ld[0]["geo"] = {"@type": "GeoCoordinates", "latitude": g[0], "longitude": g[1]}
+    ld.append({"@context": "https://schema.org", "@type": "WebPage", "url": f"{SITE}/danji/{h['id']}/", "name": f"{h['name']} 분양정보·청약일정",
+               "dateModified": updated, "inLanguage": "ko-KR", "abstract": " ".join(facts(h)),
+               "isPartOf": {"@type": "WebSite", "name": "VISIT ONE 비지트원", "url": SITE + "/"},
+               "publisher": {"@type": "Organization", "name": "VISIT ONE", "alternateName": "비지트원", "url": SITE + "/"},
+               "isBasedOn": {"@type": "Dataset", "name": "한국부동산원 청약홈 분양정보", "url": "https://www.applyhome.co.kr"}})
     if fq: ld.append({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in fq]})
     sl = SIDO_SLUG.get(h["sido"], "")
     crumbs = [("분양정보", "/bunyang/")] + ([(h["sido"], f"/bunyang/{sl}/")] if sl else []) + [(h["name"], f"/danji/{h['id']}/")]

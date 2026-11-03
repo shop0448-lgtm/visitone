@@ -333,7 +333,58 @@ def run(all_h, geo, updated):
     except Exception as e: print("press error", e)
     try: out += news_hub(reps, policy, updated, news)
     except Exception as e: print("hub error", e)
+    try: llms_txt(all_h, updated, policy, reps)
+    except Exception as e: print("llms error", e)
     return [x if isinstance(x, tuple) else (x, "0.6", "monthly") for x in out]
+
+def _meta(path):
+    try: t = open(path, encoding="utf-8").read()
+    except Exception: return None
+    ti = re.search(r"<title>(.*?)</title>", t, re.S); de = re.search(r'<meta name="description" content="([^"]*)"', t)
+    if not ti: return None
+    return _html.unescape(ti.group(1).split(" | ")[0].strip()), _html.unescape(de.group(1)) if de else ""
+
+def llms_txt(all_h, updated, policy=None, reps=None):
+    """AI 검색(GEO)용 /llms.txt, /llms-full.txt 를 매 실행마다 최신 데이터로 생성"""
+    S = G.SITE
+    live = [h for h in all_h if G.status(h)[0] != "마감"]
+    live.sort(key=lambda h: (h["sp_b"] or h["r_b"] or "9"))
+    L = ["# VISIT ONE 비지트원", "",
+         "> 전국 아파트·오피스텔·무순위·민간임대 분양정보와 청약 일정, 분양가, 경쟁률, 당첨 가점, 분양권 프리미엄, 주변 실거래가 비교를 매일 자동으로 정리하는 분양·청약 정보 플랫폼입니다. 데이터 출처는 한국부동산원 청약홈·국토교통부 실거래가 공개 API(공공데이터)이며, VISIT ONE은 개별 단지의 사업주체나 분양대행사가 아닙니다.",
+         "", f"기준일: {updated} · 하루 2회(06시·12시 KST) 자동 업데이트 · 운영: 제이에이치기획(대표 하진훈) · shop0448@gmail.com", "",
+         "## 주요 페이지", "",
+         f"- [전국 분양정보]({S}/bunyang/): 지역·유형·청약 상태별 분양 단지 목록 ({len(all_h)}개 단지, 진행 중 {len(live)}개)",
+         f"- [청약캘린더]({S}/calendar/): 이번 달·다음 달 청약 접수, 당첨 발표, 계약 일정",
+         f"- [분양맵]({S}/map/): 전국 분양 단지를 지도에서 확인",
+         f"- [무순위·잔여세대]({S}/remain/): 무순위(줍줍)·잔여세대 공고",
+         f"- [분양 뉴스]({S}/news/press/): 분양·청약 관련 언론 보도 모음",
+         f"- [정책·제도]({S}/news/policy/): 청약·주택 관련 정부 정책 소식(정책브리핑)",
+         f"- [주간 청약 리포트]({S}/news/weekly/): 주간 일정·경쟁률 TOP·무순위 정리",
+         f"- [청약·분양 가이드]({S}/guide/): 1순위 조건, 가점 계산, 특별공급, 분양 대금, 당첨 후 절차",
+         f"- [부동산 용어사전]({S}/glossary/)", "",
+         "## 지역별 분양정보", ""]
+    for nm, sl in G.SIDO:
+        n = sum(1 for h in all_h if h["sido"] == nm)
+        if n: L.append(f"- [{nm} 분양정보]({S}/bunyang/{sl}/): {n}개 단지")
+    L += ["", "## 청약·분양 가이드", ""]
+    for f in sorted(glob.glob(os.path.join(G.ROOT, "guide", "*", "index.html"))):
+        slug = os.path.basename(os.path.dirname(f))
+        m = _meta(f)
+        if m and "이동" not in m[0]: L.append(f"- [{m[0]}]({S}/guide/{slug}/): {m[1]}")
+    if reps:
+        L += ["", "## 최근 주간 리포트", ""] + [f"- [{r['title']}]({S}/news/weekly/{r['id']}/)" for r in reps[:4] if isinstance(r, dict) and r.get("id")]
+    L += ["", "## 지금 청약 중·예정 단지 (상위 40)", ""]
+    for h in live[:40]:
+        st = G.status(h)[1]; pr = G.price_range(h)
+        L.append(f"- [{h['name']}]({S}/danji/{h['id']}/): {G.short_addr(h['addr'])} · {G.cat_label(h)} {h['units']:,}세대 · {st}" + (f" · 접수 {h['sp_b'] or h['r_b']}" if (h['sp_b'] or h['r_b']) else "") + (f" · 분양가 {pr}" if pr else ""))
+    L += ["", f"전체 진행 단지의 핵심 정보는 [{S}/llms-full.txt]({S}/llms-full.txt)에 있습니다.", "",
+          "## 제휴 현장 (광고)", "", f"- [청량리 시그니처]({S}/cheongnyangni/): 서울 동대문구 전농동 지역주택조합 조합원 모집. VISIT ONE 제휴 현장(광고)입니다.", "",
+          "## 이용 안내", "", "- 청약 자격·일정은 반드시 청약홈 입주자모집공고 원문을 확인하세요.", "- 인용 시 출처를 'VISIT ONE 비지트원(visitone.co.kr), 청약홈 공공데이터 기반'으로 표기해 주세요."]
+    open(os.path.join(G.ROOT, "llms.txt"), "w", encoding="utf-8").write("\n".join(L) + "\n")
+    F = [f"# VISIT ONE 비지트원 · 진행 중 분양 단지 전체 ({updated} 기준)", "", "> 각 단지의 핵심 사실입니다. 출처: 한국부동산원 청약홈 공공데이터. 상세 페이지 링크를 함께 표기합니다.", ""]
+    for h in live:
+        F += [f"## {h['name']}", f"URL: {S}/danji/{h['id']}/"] + [f"- {x}" for x in G.facts(h)] + [""]
+    open(os.path.join(G.ROOT, "llms-full.txt"), "w", encoding="utf-8").write("\n".join(F))
 
 PRESS_DB = {"news": {}, "blog": {}}
 NEWS_LIST = []
