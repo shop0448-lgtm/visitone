@@ -60,7 +60,7 @@ def fetch_trades(lawd, ym, cache, today):
     """한 달치 거래 (지난달 이전은 확정 → 캐시 재사용)"""
     k = f"{lawd}:{ym}"
     final = ym < (today.replace(day=1) - dt.timedelta(days=1)).strftime("%Y%m")
-    if final and k in cache: return cache[k]
+    if final and k in cache and (not cache[k] or len(cache[k][0]) >= 6): return cache[k]   # 이름·지번 없는 옛 형식이면 다시 받기
     key = os.environ.get("APPLYHOME_KEY")
     if not key: return cache.get(k, [])
     out, page = [], 1
@@ -73,7 +73,7 @@ def fetch_trades(lawd, ym, cache, today):
             g = lambda n: (it.findtext(n) or "").strip()
             if g("cdealType") in ("O", "Y"): continue          # 해제 거래 제외
             try:
-                out.append([g("umdNm"), round(float(g("excluUseAr") or 0), 1), int(g("dealAmount").replace(",", "") or 0), int(g("buildYear") or 0)])
+                out.append([g("umdNm"), round(float(g("excluUseAr") or 0), 1), int(g("dealAmount").replace(",", "") or 0), int(g("buildYear") or 0), g("aptNm"), g("jibun")])
             except Exception: pass
         total = int(root.findtext(".//totalCount") or 0)
         if page * 1000 >= total or not items: break
@@ -96,7 +96,7 @@ def market_compare(all_h, geo, today):
         if r: by_lawd.setdefault(r[0], []).append(h)
     for lawd, hs in by_lawd.items():
         trades = []
-        for ym in months: trades += fetch_trades(lawd, ym, cache, today)
+        for ym in months: trades += [tr + [ym] for tr in fetch_trades(lawd, ym, cache, today)]
         for h in hs:
             dong = reg[h["id"]][1]
             rows = []
@@ -119,10 +119,64 @@ def market_compare(all_h, geo, today):
                 k = int(r_["excl"])
                 if k not in uniq or r_["price"] > uniq[k]["price"]: uniq[k] = r_
             if uniq: h["mkt"] = sorted(uniq.values(), key=lambda x: x["excl"])
+            try: near_apts(h, dong, trades, today)
+            except Exception as e: print("near error", h["id"], e)
+    save_apt_geo()
     # 오래된 캐시 정리(13개월 이전)
     keep = set(months)
     cache = {k: v for k, v in cache.items() if k.split(":")[1] in keep}
     _save("trades.json", cache)
+
+APT_GEO = {}
+def _apt_geo_load():
+    if not APT_GEO: APT_GEO.update(_load("apt_geo.json", {}))
+    return APT_GEO
+
+def _dist_km(a, b):
+    import math
+    dy = (a[0] - b[0]) * 111.0; dx = (a[1] - b[1]) * 111.0 * math.cos(math.radians(a[0]))
+    return (dx * dx + dy * dy) ** 0.5
+
+def near_apts(h, dong, trades, today):
+    """같은 동·같은 면적대(±5㎡)로 거래된 주변 아파트 → h['near'] = [{n,y,x,by,a,c,ex,ld}] (지도 표시용)"""
+    g0 = (G.GEO.get(h["id"]) if hasattr(G, "GEO") else None)
+    if not g0: return
+    sizes = [t["excl"] for t in h["types"] if t.get("excl")]
+    if not sizes: return
+    apts = {}
+    for tr in trades:
+        if len(tr) < 7 or tr[0] != dong or not tr[4]: continue
+        ex = min(sizes, key=lambda s_: abs(s_ - tr[1]))
+        if abs(ex - tr[1]) > 5: continue
+        k = f"{tr[0]}|{tr[5]}|{tr[4]}"
+        a = apts.setdefault(k, {"n": tr[4], "j": tr[5], "by": tr[3], "p": {}, "ld": ""})
+        a["p"].setdefault(round(ex), []).append(tr[2])
+        if tr[6] > a["ld"]: a["ld"] = tr[6]
+    if not apts: return
+    geo = _apt_geo_load(); key = os.environ.get("KAKAO_REST_KEY")
+    pre = " ".join((h["addr"] or "").split()[:2])
+    out = []
+    for k, a in sorted(apts.items(), key=lambda kv: -sum(len(v) for v in kv[1]["p"].values()))[:40]:
+        gk = f"{pre}|{k}"
+        if gk not in geo and key:
+            hit = None
+            for q, kind in ((f"{pre} {dong} {a['j']}", "address"), (f"{pre} {a['n']}", "keyword")):
+                if not q.strip() or (kind == "address" and not a["j"]): continue
+                u = f"https://dapi.kakao.com/v2/local/search/{kind}.json?" + urllib.parse.urlencode({"query": q, "size": 1})
+                try:
+                    docs = json.loads(_get(u, {"Authorization": "KakaoAK " + key})).get("documents") or []
+                    if docs: hit = [round(float(docs[0]["y"]), 6), round(float(docs[0]["x"]), 6)]; break
+                except Exception: pass
+            geo[gk] = hit; time.sleep(0.03)
+        pt = geo.get(gk)
+        if not pt or _dist_km(pt, g0) > 3: continue
+        ex, ps = max(a["p"].items(), key=lambda kv: len(kv[1]))
+        out.append({"n": a["n"], "y": pt[0], "x": pt[1], "by": a["by"], "ex": ex, "a": int(sum(ps) / len(ps)), "c": len(ps),
+                    "nw": 1 if a["by"] and a["by"] >= today.year - 10 else 0, "ld": a["ld"]})
+    if out: h["near"] = out[:30]
+
+def save_apt_geo():
+    if APT_GEO: _save("apt_geo.json", APT_GEO)
 
 def mkt_box(h):
     rows = h.get("mkt") or []
@@ -135,6 +189,7 @@ def mkt_box(h):
         pct = diff / base * 100 if base else 0
         tag = (f'<span class="mk-lo">주변 시세보다 약 {won(abs(diff))} 낮음</span>' if pct <= -3 else
                f'<span class="mk-hi">주변 시세보다 약 {won(abs(diff))} 높음</span>' if pct >= 3 else '<span class="mk-eq">주변 시세와 비슷</span>')
+        if not r["new_avg"] and pct >= 3: tag += '<small>신축 거래 없음 · 구축 위주 비교라 차이가 크게 보일 수 있음</small>'
         trs += (f'<tr><td><b>{esc(r["label"])}</b><small>{r["excl"]:.0f}㎡</small></td><td class="pr">{won(r["price"])}</td>'
                 f'<td>{won(r["avg"])}<small>{r["n"]}건 · {won(r["lo"])}~{won(r["hi"])}</small></td>'
                 f'<td>{won(r["new_avg"]) + f"<small>{r["new_n"]}건</small>" if r["new_avg"] else "-"}</td><td>{tag}</td></tr>')
@@ -142,7 +197,8 @@ def mkt_box(h):
     return (f'<h2>분양가 vs 주변 실거래가</h2><p class="muted">최근 12개월 국토교통부 아파트 매매 실거래가 중 <b>{esc(scope)}</b>(전용 ±5㎡) 거래와 비교했습니다. '
             f'신축 기준은 준공 10년 이내 아파트입니다.</p><div class="tw"><table class="tbl dt mk"><thead><tr><th>타입</th><th>최고 분양가</th>'
             f'<th>주변 평균 실거래가</th><th>신축(10년 이내) 평균</th><th>비교</th></tr></thead><tbody>{trs}</tbody></table></div>'
-            f'<p class="muted">※ 실거래가는 층·향·연식에 따라 차이가 크며, 분양가는 타입별 최고가 기준입니다. 단순 참고용으로만 활용하세요. 출처: 국토교통부 실거래가 공개시스템(공공데이터)</p>')
+            + ('<p><a class="onmap" href="#dmap">위치 지도에서 주변 아파트 시세 보기 →</a></p>' if h.get("near") else "")
+            + f'<p class="muted">※ 실거래가는 층·향·연식에 따라 차이가 크며, 분양가는 타입별 최고가 기준입니다. 단순 참고용으로만 활용하세요. 출처: 국토교통부 실거래가 공개시스템(공공데이터)</p>')
 
 # ═════════════════════════ 2) 정책·제도 ═════════════════════════
 POLICY = "https://apis.data.go.kr/1371000/policyNewsService2/policyNewsList2"
@@ -429,7 +485,7 @@ SILV = "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvT
 def fetch_silv(lawd, ym, cache, today):
     k = f"S:{lawd}:{ym}"
     final = ym < (today.replace(day=1) - dt.timedelta(days=1)).strftime("%Y%m")
-    if final and k in cache: return cache[k]
+    if final and k in cache and (not cache[k] or len(cache[k][0]) >= 6): return cache[k]   # 이름·지번 없는 옛 형식이면 다시 받기
     key = os.environ.get("APPLYHOME_KEY")
     if not key: return cache.get(k, [])
     out, page = [], 1
@@ -677,7 +733,7 @@ def kw_body(kw, intro, items, related, updated, faq_extra=None):
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": f"{kw} 분양정보 · 청약일정", "dateModified": updated, "inLanguage": "ko-KR", "abstract": " ".join(sm),
            "isPartOf": {"@type": "WebSite", "name": "VISIT ONE 비지트원", "url": G.SITE + "/"}},
           {"@context": "https://schema.org", "@type": "ItemList", "name": f"{kw} 분양 단지", "numberOfItems": len(items),
-           "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{G.SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate((live + done)[:50])]},
+           "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{G.SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate((live + [x for x in items if x not in live])[:50])]},
           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in faq]}]
     return body, ld, sm
 

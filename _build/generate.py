@@ -363,35 +363,27 @@ def cal_links(h):
     ics = "data:text/calendar;charset=utf-8," + urllib.parse.quote("\r\n".join(lines))
     return f'<div class="cals"><a class="calb ics" href="{ics}" download="visitone-{h["id"]}.ics">📅 휴대폰 캘린더에 추가 (전날 알림)</a>{g}</div>'
 
+KAKAO_CH = "https://pf.kakao.com/_xhwxdxeX"   # 비지트원 카카오톡 채널
+
 def consult_form(h):
-    """청약 알림 신청 (VISIT ONE은 해당 단지의 분양 대행사가 아니므로 상담·예약 대신 일정 알림만 받음)"""
+    """알림 받기: ① 휴대폰 캘린더(무료·실제 작동) ② 카카오톡 채널 추가(새 분양 소식). 이름·번호 직접 입력폼은 자동 발송이 생길 때까지 사용 안 함"""
     closed = status(h)[0] == "마감"
-    title = "비슷한 새 분양 알림 받기" if closed else "이 단지 청약 알림 받기"
-    lead = ("이 단지는 청약이 끝났습니다. 같은 지역·비슷한 조건의 새 분양 공고가 나오면 알려드립니다." if closed else
-            "접수 시작 전날과 당첨 발표일을 놓치지 않도록 알려드립니다. 아래 버튼으로 지금 바로 내 휴대폰 캘린더에 일정을 넣어둘 수도 있습니다.")
-    opts = ([("새공고", "같은 지역 새 분양 공고", True)] if closed else
-            [("접수전날", "청약 접수 전날 알림", True), ("발표일", "당첨 발표일 알림", True), ("새공고", "같은 지역 새 분양 공고", False)])
-    chk = "".join(f'<label class="pchk"><input type="checkbox" name="al" value="{v}"{" checked" if on else ""}> {t}</label>' for v, t, on in opts)
-    nm = esc(h["name"]).replace("'", "")
+    cals = "" if closed else cal_links(h)
+    title = "매주 청약 일정 받기" if closed else "이 단지 청약 일정 알림 받기"
+    if closed:
+        lead = "이 단지는 청약이 끝났습니다. VISIT ONE 카카오톡 채널을 추가하면 매주 전국 청약 일정을 카톡으로 받아볼 수 있습니다."
+    elif cals:
+        lead = "아래 버튼을 누르면 접수일과 당첨 발표일이 내 휴대폰 캘린더에 들어가고, 전날 휴대폰이 알려줍니다. 가입 없이 무료입니다."
+    else:
+        lead = "VISIT ONE 카카오톡 채널을 추가하면 매주 전국 청약 일정을 카톡으로 받아볼 수 있습니다."
+    sl = SIDO_SLUG.get(h["sido"], "")
+    more = f'<a class="calb" href="/bunyang/{sl}/">{esc(h["sido"])} 분양 단지 더 보기 →</a>' if (closed and sl) else ""
     return f"""<section class="consult" id="consult"><h2>{title}</h2>
 <p>{lead}</p>
-{cal_links(h)}
-<form class="pform" id="cform" novalidate><div class="pgrid">
-<label>성함 *<input id="c_name" autocomplete="name"></label>
-<label>휴대폰 번호 *<input id="c_phone" type="tel" inputmode="numeric" placeholder="010-0000-0000"></label></div>
-<div class="pchks">{chk}</div>
-<label class="pagree"><input type="checkbox" id="c_agree"> [필수] 청약 일정 알림 발송을 위한 개인정보(성함, 휴대폰 번호, 관심 단지) 수집·이용에 동의합니다. 보유 기간: 알림 종료 후 1년 또는 삭제 요청 시까지. <a href="/privacy/">처리방침</a></label>
-<label class="pagree"><input type="checkbox" id="c_mkt"> [선택] 관심 조건과 비슷한 VISIT ONE 제휴 현장 안내를 문자·전화로 받겠습니다.</label>
-<p class="perr" id="c_err" hidden>성함과 휴대폰 번호를 입력하고 필수 동의에 체크해 주세요.</p>
-<button type="submit" class="pbtn">알림 신청하기</button><p class="pok" id="c_ok" hidden>알림 신청이 완료되었습니다. 일정에 맞춰 알려드리겠습니다.</p>
-<p class="pnote">VISIT ONE은 이 단지의 분양 사업 주체나 대행사가 아니며, 청약 신청과 공식 문의는 청약홈과 사업 주체를 통해 진행됩니다.</p></form>
-<script>(function(){{var f=document.getElementById('cform'),v=function(i){{return document.getElementById(i).value.trim();}};
-document.getElementById('c_phone').addEventListener('input',function(e){{var x=e.target.value.replace(/[^0-9]/g,'').slice(0,11);if(x.length>7)x=x.replace(/(\\d{{3}})(\\d{{3,4}})(\\d{{4}})/,'$1-$2-$3');else if(x.length>3)x=x.slice(0,3)+'-'+x.slice(3);e.target.value=x;}});
-f.addEventListener('submit',function(e){{e.preventDefault();var ok=v('c_name')&&/^01\\d-?\\d{{3,4}}-?\\d{{4}}$/.test(v('c_phone'))&&document.getElementById('c_agree').checked;
-document.getElementById('c_err').hidden=ok;if(!ok)return;var al=[].map.call(f.querySelectorAll('input[name=al]:checked'),function(x){{return x.value;}}).join(',');
-var b=new URLSearchParams();b.append('{GFE["site"]}','[청약알림] {nm}');b.append('{GFE["date"]}','{esc(h["sp_b"] or h["r_b"] or "")}');b.append('{GFE["name"]}',v('c_name'));b.append('{GFE["phone"]}',v('c_phone'));
-b.append('{GFE["kind"]}','{h["id"]} · {esc(h["sido"])}');b.append('{GFE["memo"]}','알림: '+(al||'-')+' / 발표 {esc(h["win"] or "-")} / 제휴현장 안내 동의: '+(document.getElementById('c_mkt').checked?'Y':'N'));
-fetch('{GF}',{{method:'POST',mode:'no-cors',body:b}}).then(function(){{f.querySelector('.pbtn').disabled=true;document.getElementById('c_ok').hidden=false;}}).catch(function(){{document.getElementById('c_err').textContent='전송에 실패했습니다. 잠시 후 다시 시도해 주세요.';document.getElementById('c_err').hidden=false;}});}});}})();</script></section>"""
+{cals}
+<div class="kch"><a class="kch-btn" href="{KAKAO_CH}" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.48 3 2 6.48 2 10.8c0 2.78 1.86 5.22 4.66 6.6l-.95 3.5c-.08.3.26.54.52.37l4.13-2.74c.54.06 1.08.1 1.64.1 5.52 0 10-3.48 10-7.8S17.52 3 12 3z"></path></svg>카카오톡으로 매주 청약 일정 받기</a>{more}</div>
+<p class="kch-sub">매주 다음 주 특별공급·청약 접수·당첨 발표 일정을 한 번에 정리해 보내드립니다.</p>
+<p class="pnote">VISIT ONE은 이 단지의 분양 사업 주체나 대행사가 아니며, 청약 신청과 공식 문의는 청약홈과 사업 주체를 통해 진행됩니다.</p></section>"""
 
 def pre_html(h):
     import extras
@@ -495,14 +487,24 @@ def dmap_html(h):
     y, x = g[0], g[1]
     note = {"addr": "", "kw": " (단지명 검색 기준 위치)"}.get(g[2], " (대략적 위치 · 읍·면·동 기준)")
     lvl = 4 if g[2] in ("addr", "kw") else 6
-    return (f'<h2>위치</h2><div id="dmap" class="dmap" data-y="{y}" data-x="{x}" data-n="{esc(h["name"])}"></div>'
+    near = h.get("near") or []
+    nj = esc(json.dumps([[a["n"], a["y"], a["x"], a["by"], a["ex"], a["a"], a["c"], a["nw"]] for a in near], ensure_ascii=False, separators=(",", ":")))
+    legend = ('<p class="dleg"><span class="dl-me">분양 단지</span><span class="dl-nw">신축(10년 이내)</span><span class="dl-old">그 외 아파트</span>'
+              '<span class="dl-tx">숫자 = 같은 면적대 최근 12개월 평균 실거래가 · 누르면 상세</span></p><p class="dinfo" id="dinfo" aria-live="polite"></p>') if near else ""
+    return (f'<h2>위치</h2><div id="dmap" class="dmap" data-y="{y}" data-x="{x}" data-n="{esc(h["name"])}" data-near="{nj}"></div>{legend}'
             f'<p class="muted">{esc(h["addr"])}{note} · <a href="https://map.kakao.com/link/map/{urllib.parse.quote(h["name"])},{y},{x}" target="_blank" rel="noopener">카카오맵에서 크게 보기 →</a> · <a href="/map/?id={h["id"]}">주변 분양 단지 보기 →</a></p>'
-            '<script>(function(){var el=document.getElementById("dmap");if(!el)return;function go(){var s=document.createElement("script");'
+            '<script>(function(){var el=document.getElementById("dmap");if(!el)return;function eok(v){return v>=10000?(Math.round(v/1000)/10)+"억":v.toLocaleString()+"만";}'
+            'function go(){var s=document.createElement("script");'
             f's.src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_JS}&autoload=false";'
             's.onload=function(){kakao.maps.load(function(){var ll=new kakao.maps.LatLng(+el.dataset.y,+el.dataset.x);'
             f'var m=new kakao.maps.Map(el,{{center:ll,level:{lvl}}});'
-            'm.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);'
-            'new kakao.maps.Marker({map:m,position:ll,title:el.dataset.n});m.setZoomable(false);});};document.head.appendChild(s);}'
+            'm.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);m.setZoomable(false);'
+            'new kakao.maps.Marker({map:m,position:ll,title:el.dataset.n,zIndex:5});'
+            'var nr=[];try{nr=JSON.parse(el.dataset.near||"[]");}catch(e){}if(!nr.length)return;var bd=new kakao.maps.LatLngBounds();bd.extend(ll);var info=document.getElementById("dinfo");'
+            'nr.forEach(function(a){var p=new kakao.maps.LatLng(a[1],a[2]);bd.extend(p);var b=document.createElement("button");b.type="button";b.className="dpin"+(a[7]?" nw":"");'
+            'b.textContent=eok(a[5]);b.setAttribute("aria-label",a[0]+" 평균 "+eok(a[5]));'
+            'b.onclick=function(){if(info)info.textContent=a[0]+(a[3]?" ("+a[3]+"년 준공)":"")+" · 전용 "+a[4]+"㎡ 평균 "+eok(a[5])+" · 최근 12개월 "+a[6]+"건";};'
+            'new kakao.maps.CustomOverlay({map:m,position:p,content:b,yAnchor:1.2,zIndex:3});});m.setBounds(bd,40,40,40,40);});};document.head.appendChild(s);}'
             'if("IntersectionObserver"in window){var o=new IntersectionObserver(function(e){if(e[0].isIntersecting){o.disconnect();go();}},{rootMargin:"300px"});o.observe(el);}else go();})();</script>')
 
 def danji_page(h, all_h, updated):
@@ -532,7 +534,7 @@ def danji_page(h, all_h, updated):
 <div class="dh"><div class="dh-tags">{badge(h)}<span class="cat">{esc(cat_label(h))}</span><span class="cat">{esc(h["sido"])}</span>{flags}{(f'<span class="fl crt">경쟁률 {cr_txt(h["rate_all"])}</span>') if h.get("rate_all") else ""}</div>
 <h1>{esc(h["name"])}</h1><p class="lead">{lead}</p>
 <div class="kf"><div><small>공급 세대</small><b>{h["units"]:,}세대</b></div><div><small>청약 접수</small><b>{kdate(h["sp_b"] or h["r_b"])}</b></div><div><small>당첨 발표</small><b>{kdate(h["win"])}</b></div><div><small>분양가</small><b>{esc(pr) if pr else "공고 확인"}</b></div></div>
-<div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">{"새 분양 알림 받기" if st == "마감" else "청약 알림 받기"}</a></div></div>
+<div class="dh-cta">{"".join(links)}<a class="lb gold" href="#consult">{"매주 청약 일정 받기" if st == "마감" else "청약 일정 알림 받기"}</a></div></div>
 {facts_box(h, updated)}
 <h2>청약 일정</h2><ol class="tline">{tl}</ol>
 <table class="tbl sched"><tbody>
