@@ -2,11 +2,11 @@
 
 > 전국 아파트·오피스텔·무순위·민간임대 분양정보와 청약 일정, 분양가, 경쟁률, 당첨 가점, 분양권 프리미엄, 주변 실거래가 비교를 매일 자동으로 정리하는 분양·청약 정보 플랫폼입니다. 데이터 출처는 한국부동산원 청약홈·국토교통부 실거래가 공개 API(공공데이터)이며, VISIT ONE은 개별 단지의 사업주체나 분양대행사가 아닙니다.
 
-기준일: 2026-11-07 · 하루 2회(06시·12시 KST) 자동 업데이트 · 운영: 제이에이치기획(대표 하진훈) · shop0448@gmail.com
+기준일: 2026-11-08 · 하루 2회(06시·12시 KST) 자동 업데이트 · 운영: 제이에이치기획(대표 하진훈) · shop0448@gmail.com
 
 ## 주요 페이지
 
-- [전국 분양정보](https://visitone.co.kr/bunyang/): 지역·유형·청약 상태별 분양 단지 목록 (632개 단지, 진행 중 93개)
+- [전국 분양정보](https://visitone.co.kr/bunyang/): 지역·유형·청약 상태별 분양 단지 목록 (627개 단지, 진행 중 87개)
 - [청약캘린더](https://visitone.co.kr/calendar/): 이번 달·다음 달 청약 접수, 당첨 발표, 계약 일정
 - [분양맵](https://visitone.co.kr/map/): 전국 분양 단지를 지도에서 확인
 - [무순위·잔여세대](https://visitone.co.kr/remain/): 무순위(줍줍)·잔여세대 공고
@@ -18,8 +18,8 @@
 
 ## 지역별 분양정보
 
-- [서울 분양정보](https://visitone.co.kr/bunyang/seoul/): 93개 단지
-- [경기 분양정보](https://visitone.co.kr/bunyang/gyeonggi/): 288개 단지
+- [서울 분양정보](https://visitone.co.kr/bunyang/seoul/): 92개 단지
+- [경기 분양정보](https://visitone.co.kr/bunyang/gyeonggi/): 286개 단지
 - [인천 분양정보](https://visitone.co.kr/bunyang/incheon/): 84개 단지
 - [부산 분양정보](https://visitone.co.kr/bunyang/busan/): 43개 단지
 - [대구 분양정보](https://visitone.co.kr/bunyang/daegu/): 5개 단지
@@ -29,9 +29,9 @@
 - [세종 분양정보](https://visitone.co.kr/bunyang/sejong/): 6개 단지
 - [강원 분양정보](https://visitone.co.kr/bunyang/gangwon/): 7개 단지
 - [충북 분양정보](https://visitone.co.kr/bunyang/chungbuk/): 6개 단지
-- [충남 분양정보](https://visitone.co.kr/bunyang/chungnam/): 20개 단지
+- [충남 분양정보](https://visitone.co.kr/bunyang/chungnam/): 19개 단지
 - [전북 분양정보](https://visitone.co.kr/bunyang/jeonbuk/): 5개 단지
-- [전남 분양정보](https://visitone.co.kr/bunyang/jeonnam/): 5개 단지
+- [전남 분양정보](https://visitone.co.kr/bunyang/jeonnam/): 4개 단지
 - [경북 분양정보](https://visitone.co.kr/bunyang/gyeongbuk/): 5개 단지
 - [경남 분양정보](https://visitone.co.kr/bunyang/gyeongnam/): 23개 단지
 - [제주 분양정보](https://visitone.co.kr/bunyang/jeju/): 5개 단지
@@ -45,7 +45,7 @@
 - [아파트 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EC%95%84%ED%8C%8C%ED%8A%B8/): 151개 단지
 - [오피스텔·도시형생활주택 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94/): 37개 단지
 - [민간임대 아파트 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EB%AF%BC%EA%B0%84%EC%9E%84%EB%8C%80/): 49개 단지
-- [무순위 청약(줍줍) 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EB%AC%B4%EC%88%9C%EC%9C%84-%EC%A4%8D%EC%A4%8D/): 156개 단지
+- [무순위 청약(줍줍) 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EB%AC%B4%EC%88%9C%EC%9C%84-%EC%A4%8D%EC%A4%8D/): 151개 단지
 - [임의공급 아파트 분양정보](https://visitone.co.kr/%EB%B6%84%EC%96%91/%EC%9E%84%EC%9D%98%EA%B3%B5%EA%B8%89/): 239개 단지
 - [자이 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%9E%90%EC%9D%B4/): 43개 단지
 - [힐스테이트 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8/): 25개 단지
@@ -55,7 +55,7 @@
 - [롯데캐슬 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EB%A1%AF%EB%8D%B0%EC%BA%90%EC%8A%AC/): 11개 단지
 - [e편한세상 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81/): 3개 단지
 - [디에트르 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EB%94%94%EC%97%90%ED%8A%B8%EB%A5%B4/): 40개 단지
-- [수자인 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%88%98%EC%9E%90%EC%9D%B8/): 26개 단지
+- [수자인 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%88%98%EC%9E%90%EC%9D%B8/): 24개 단지
 - [에피트 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%97%90%ED%94%BC%ED%8A%B8/): 23개 단지
 - [호반써밋 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%ED%98%B8%EB%B0%98%EC%8D%A8%EB%B0%8B/): 11개 단지
 - [두산위브 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EB%91%90%EC%82%B0%EC%9C%84%EB%B8%8C/): 11개 단지
@@ -65,8 +65,8 @@
 - [더휴 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EB%8D%94%ED%9C%B4/): 12개 단지
 - [엘리프 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%97%98%EB%A6%AC%ED%94%84/): 12개 단지
 - [해링턴 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%ED%95%B4%EB%A7%81%ED%84%B4/): 7개 단지
-- [제일풍경채 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84/): 7개 단지
-- [어울림 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%96%B4%EC%9A%B8%EB%A6%BC/): 6개 단지
+- [제일풍경채 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84/): 5개 단지
+- [어울림 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%96%B4%EC%9A%B8%EB%A6%BC/): 5개 단지
 - [센트레빌 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EC%84%BC%ED%8A%B8%EB%A0%88%EB%B9%8C/): 5개 단지
 - [하늘채 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%ED%95%98%EB%8A%98%EC%B1%84/): 5개 단지
 - [데시앙 분양정보](https://visitone.co.kr/%EB%B8%8C%EB%9E%9C%EB%93%9C/%EB%8D%B0%EC%8B%9C%EC%95%99/): 4개 단지
@@ -116,7 +116,6 @@
 - [아산 그랑시티필하우스](https://visitone.co.kr/danji/2026000267/): 충청남도 아산시 배방읍 · 아파트 1,380세대 · 계약 예정 · 접수 2026-10-19 · 분양가 4억 7,840만 ~ 6억 2,440만
 - [인천계양 A17블록 신혼희망타운(공공분양)(본청약)](https://visitone.co.kr/danji/2026820010/): 인천광역시 계양구 귤현동, · 아파트 309세대 · 계약 예정 · 접수 2026-10-19 · 분양가 5억 717만 ~ 5억 844만
 - [익산 부송에코르 10년 공공임대주택](https://visitone.co.kr/danji/2026000402/): 전북특별자치도 익산시 부송동 · 아파트 300세대 · 계약 예정 · 접수 2026-10-22 · 분양가 7,200만
-- [매교역 팰루시드](https://visitone.co.kr/danji/2026950093/): 경기도 수원시 권선구 · 민간임대 154세대 · 계약 진행중 · 접수 2026-10-26 · 분양가 3억 1,200만
 - [트리븐센텀 2단지](https://visitone.co.kr/danji/2026000514/): 부산광역시 해운대구 반여동 · 아파트 792세대 · 계약 예정 · 접수 2026-10-26 · 분양가 6억 9,280만 ~ 10억 1,830만
 - [트리븐센텀 1단지](https://visitone.co.kr/danji/2026000513/): 부산광역시 해운대구 반여동 · 아파트 852세대 · 계약 예정 · 접수 2026-10-26 · 분양가 6억 8,940만 ~ 10억 2,850만
 - [아크메르 동탄 99](https://visitone.co.kr/danji/2026000509/): 경기도 화성특례시 동탄구 · 아파트 996세대 · 계약 예정 · 접수 2026-10-26 · 분양가 17억 1,320만 ~ 34억 7,450만
@@ -124,14 +123,15 @@
 - [광안센텀 비스타동원(조합원 취소분)](https://visitone.co.kr/danji/2026000507/): 부산광역시 수영구 광안동 · 아파트 39세대 · 계약 예정 · 접수 2026-10-26 · 분양가 6억 6,100만 ~ 9억 1,400만
 - [연산 센텀 월드메르디앙](https://visitone.co.kr/danji/2026000495/): 부산광역시 연제구 연산동 · 아파트 144세대 · 계약 예정 · 접수 2026-10-26 · 분양가 4억 2,316만 ~ 6억 1,620만
 - [고덕강일지구 3단지 토지임대부(본청약)](https://visitone.co.kr/danji/2026000373/): 서울특별시 강동구 강일동 · 아파트 1,305세대 · 당첨 발표 대기 · 접수 2026-10-26 · 분양가 2억 9,567만 ~ 3억 9,050만
-- [GD 메트로 타워](https://visitone.co.kr/danji/2026950088/): 서울특별시 영등포구 대림동 · 오피스텔 770세대 · 계약 진행중 · 접수 2026-10-27 · 분양가 3억 5,693만 ~ 8억 8,422만
-- [충정로역자이르네(2차)](https://visitone.co.kr/danji/2026910270/): 서울특별시 중구 중림동 · 무순위 9세대 · 계약 진행중 · 접수 2026-10-27 · 분양가 24억 3,300만
 - [신분평 에피트 더웨이시티](https://visitone.co.kr/danji/2026000455/): 충청북도 청주시 서원구 · 아파트 992세대 · 계약 예정 · 접수 2026-10-27 · 분양가 3억 9,290만 ~ 6억 5,890만
-- [안성 아양지구 B-2블록 금성백조 예미지(2차)](https://visitone.co.kr/danji/2026940238/): 경기도 안성시 아양지구 · 임의공급 73세대 · 계약 진행중 · 접수 2026-10-28 · 분양가 4억 4,330만
 - [대방역 여의도 더로드캐슬](https://visitone.co.kr/danji/2026950094/): 서울특별시 영등포구 신길동 · 오피스텔 4세대 · 계약 진행중 · 접수 2026-10-28 · 분양가 5억 200만 ~ 5억 2,104만
 - [엘리프 성성호수공원 1BL](https://visitone.co.kr/danji/2026940234/): 충청남도 천안시 서북구 · 임의공급 5세대 · 계약 예정 · 접수 2026-10-30 · 분양가 7억 9,940만
-- [엘리프 한신더휴 수원 C3블록(2차)](https://visitone.co.kr/danji/2026940237/): 경기도 수원시 권선구 · 임의공급 21세대 · 계약 진행중 · 접수 2026-11-02 · 분양가 7억 3,000만 ~ 7억 9,500만
 - [과천 디에트르 퍼스티지(S2BL)](https://visitone.co.kr/danji/2026930043/): 경기도 과천시 지식정보타운 · 불법행위 재공급 2세대 · 계약 예정 · 접수 2026-11-02 · 분양가 8억 5,715만
+- [파주 운정신도시 우미 린 더 센텀](https://visitone.co.kr/danji/2026930042/): 경기도 파주시 물향기1로 · 불법행위 재공급 1세대 · 계약 예정 · 접수 2026-11-02 · 분양가 5억 4,250만
+- [화서역 호수공원 아너스빌](https://visitone.co.kr/danji/2026910269/): 경기도 수원시 권선구 · 무순위 169세대 · 계약 예정 · 접수 2026-11-02 · 분양가 8억 9,300만 ~ 8억 9,800만
+- [파주 운정신도시 우미 린 더 센텀](https://visitone.co.kr/danji/2026910257/): 경기도 파주시 물향기1로 · 무순위 2세대 · 계약 예정 · 접수 2026-11-02 · 분양가 5억 3,450만 ~ 5억 4,250만
+- [시흥하중지구 A1블록 신혼희망타운(공공분양) 추가입주자모집공고](https://visitone.co.kr/danji/2026820012/): 경기도 시흥시 하중동 · 아파트 175세대 · 당첨 발표 대기 · 접수 2026-11-02 · 분양가 4억 2,215만 ~ 4억 2,374만
+- [계양신도시 카이브 유보라(AC4BL)](https://visitone.co.kr/danji/2026000532/): 인천광역시 계양구 동양동 · 아파트 496세대 · 당첨 발표 대기 · 접수 2026-11-02 · 분양가 8억 800만 ~ 9억 600만
 
 전체 진행 단지의 핵심 정보는 [https://visitone.co.kr/llms-full.txt](https://visitone.co.kr/llms-full.txt)에 있습니다.
 
