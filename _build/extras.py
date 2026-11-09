@@ -738,11 +738,13 @@ def kw_body(kw, intro, items, related, updated, faq_extra=None):
     return body, ld, sm
 
 KW_INDEX = []   # (분류, 이름, url, 단지수)
+ARCHIVE = []    # generate.py가 채움: 수집 기간이 지난 단지(마감)
 
 def keyword_pages(all_h, updated):
     out = []; KW_INDEX.clear()
     import shutil
-    for sub in ("분양", "브랜드", "청약일정", "keywords"): shutil.rmtree(os.path.join(G.ROOT, sub), ignore_errors=True)
+    # 키워드 페이지 폴더는 지우지 않음(한 번 만든 주소 유지). 지난 단지(ARCHIVE)까지 포함해서 집계
+    all_h = list(all_h) + [h for h in ARCHIVE if h["id"] not in {x["id"] for x in all_h}]
     yr = G.TODAY.year
     def mk(group, kw, path, intro, items, crumbs, related, title=None, desc=None, faq_extra=None, prio="0.7"):
         if len(items) < 2: return
@@ -777,7 +779,6 @@ def keyword_pages(all_h, updated):
         if x: months.setdefault((x.year, x.month), []).append(h)
     mlist = sorted(months)
     for (y, m) in mlist:
-        if not _month_ok((y, m)): continue
         rel = [(f"{y2}년 {m2}월 청약 일정", f"/청약일정/{_q(f'{y2}년-{m2}월')}/") for (y2, m2) in mlist if (y2, m2) != (y, m) and _month_ok((y2, m2)) and len(months[(y2, m2)]) >= 2][-5:]
         mk("월별", f"{y}년 {m}월 청약", f"/청약일정/{y}년-{m}월/", f"{y}년 {m}월에 청약 접수하는 전국 아파트·오피스텔·무순위·민간임대 단지를 접수일 순으로 정리했습니다.",
            months[(y, m)], [("청약캘린더", "/calendar/"), (f"{y}년 {m}월", f"/청약일정/{y}년-{m}월/")], [("청약캘린더", "/calendar/"), ("주간 청약 리포트", "/news/weekly/")] + rel,

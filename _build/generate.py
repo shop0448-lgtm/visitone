@@ -827,6 +827,23 @@ def write_sitemap(gen_paths):
     return len(seen)
 
 # ───────────────────────── 실행 ─────────────────────────
+ARCHIVE_PATH = os.path.join(ROOT, "data", "archive.json")
+ARCH_DROP = ("mkt", "near", "pre", "press", "blog")
+
+def update_archive(all_h):
+    """한 번이라도 수집된 단지를 data/archive.json에 보관. 이번 수집에 없는 단지 목록을 돌려줌(마감 단지로 계속 노출)"""
+    try: arc = json.load(open(ARCHIVE_PATH, encoding="utf-8"))
+    except Exception: arc = {}
+    cur = set()
+    for h in all_h:
+        cur.add(h["id"])
+        try: arc[h["id"]] = json.loads(json.dumps({k: v for k, v in h.items() if k not in ARCH_DROP}, ensure_ascii=False, default=str))
+        except Exception as e: print("archive save error", h.get("id"), e)
+    # 기존 단지 페이지 폴더는 있는데 보관본이 없는 경우(이 기능 이전에 사라진 단지)는 건드리지 않음
+    json.dump(arc, open(ARCHIVE_PATH, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    old = [h for i, h in arc.items() if i not in cur and h.get("name")]
+    return sorted(old, key=lambda h: (h.get("notice") or "", h["id"]), reverse=True)
+
 def main():
     if "--sample" in sys.argv:
         all_h = load_sample(sys.argv[sys.argv.index("--sample") + 1])
@@ -846,8 +863,9 @@ def main():
         v = [ppy_of(h) for h in all_h if h["sido"] == nm and h["cat"] == "A" and ppy_of(h)]
         if v: REGION_PPY[nm] = (int(sum(v) / len(v)), len(v))
     os.makedirs(os.path.join(ROOT, "data"), exist_ok=True)
-    for sub in ("danji", "bunyang", "remain", "calendar"):
+    for sub in ("bunyang", "remain", "calendar"):   # 단지 페이지(danji)는 지우지 않음 — 지난 단지도 '마감'으로 계속 유지
         shutil.rmtree(os.path.join(ROOT, sub), ignore_errors=True)
+    archived = update_archive(all_h)
     import extras
     extras.init(sys.modules[__name__])
     geo = geocode_all(all_h)
@@ -856,9 +874,13 @@ def main():
     gen = []
     for h in all_h:
         gen.append((danji_page(h, all_h, updated), "0.6", "weekly"))
-    active = [h for h in all_h if status(h)[0] != "마감"] + [h for h in all_h if status(h)[0] == "마감"]
+    for h in archived:   # 수집 기간(공고 후 약 150일)이 지난 단지 — 페이지는 '청약 마감'으로 계속 유지(404 방지)
+        try: gen.append((danji_page(h, all_h, updated), "0.4", "monthly"))
+        except Exception as e: print("archive page error", h.get("id"), e)
+    extras.ARCHIVE[:] = archived
+    active = [h for h in all_h if status(h)[0] != "마감"] + [h for h in all_h if status(h)[0] == "마감"] + archived
     gen.append((list_page("/bunyang/", "전국 분양정보", "전국 아파트·오피스텔·무순위·민간임대 분양 단지를 지역·유형·청약 상태별로 찾아보세요. 매일 업데이트됩니다.",
-                          "전국 아파트·오피스텔·무순위·민간임대 분양 단지를 지역·유형·청약 상태별로 모았습니다. 매일 청약홈 공공데이터로 업데이트됩니다.",
+                          "전국 아파트·오피스텔·무순위·민간임대 분양 단지를 지역·유형·청약 상태별로 모았습니다.<br>매일 전국 현장 업데이트됩니다.",
                           active, [("분양정보", "/bunyang/")], updated), "0.9", "daily"))
     for nm, slug in SIDO:
         items = [h for h in active if h["sido"] == nm]   # 진행 단지가 없어도 지역 페이지는 항상 생성(지역별 링크용)
