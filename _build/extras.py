@@ -681,7 +681,7 @@ TYPE_KW = [("아파트", "A", "아파트", "민영·공공 아파트 일반분�
 
 def _q(p): return urllib.parse.quote(p)
 
-_KO_PREFIX = {"/분양/": _q("/분양/"), "/브랜드/": _q("/브랜드/"), "/청약일정/": _q("/청약일정/")}
+_KO_PREFIX = {"/분양/": _q("/분양/"), "/브랜드/": _q("/브랜드/"), "/청약일정/": _q("/청약일정/"), "/건설사/": _q("/건설사/")}
 def fixhref(t):
     for a, b in _KO_PREFIX.items(): t = t.replace('href="' + a, 'href="' + b)
     return t
@@ -736,6 +736,35 @@ def kw_body(kw, intro, items, related, updated, faq_extra=None):
            "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{G.SITE}/danji/{h['id']}/", "name": h["name"]} for i, h in enumerate((live + [x for x in items if x not in live])[:50])]},
           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in faq]}]
     return body, ld, sm
+
+
+# ── 확장 키워드 (2026-11-09): 건설사 자동 인식 · 평형 · 가격대 · 시군구×월
+CNST_ALIAS = {"지에스건설": "GS건설", "아이파크현대산업개발": "HDC현대산업개발", "에이치디씨현대산업개발": "HDC현대산업개발", "에스케이에코플랜트": "SK에코플랜트",
+              "에이치엘디앤아이한라": "HL디앤아이한라", "디엘이앤씨": "DL이앤씨", "디엘건설": "DL건설", "케이씨씨건설": "KCC건설", "비에스한양": "BS한양",
+              "에이치제이중공업": "HJ중공업", "케이씨건설": "KC건설", "지에스이앤알": "GS E&R"}
+def cnst_names(h):
+    out = []
+    for part in re.split(r"[,/·]", h.get("cnst") or ""):
+        n = re.sub(r"\(주\)|㈜|주식회사|\s", "", part).strip()
+        if len(n) < 2: continue
+        n = CNST_ALIAS.get(n, n)
+        if n not in out: out.append(n)
+    return out
+
+SIZE_KW = [("59", "59㎡(24평형)", 0, 61), ("74", "74㎡(29평형)", 61, 80), ("84", "84㎡(34평형)", 80, 86), ("중대형", "중대형(85㎡ 초과)", 86, 999)]
+def size_keys(h):
+    ks = set()
+    for t in h.get("types") or []:
+        e = t.get("excl") or 0
+        for k, _, lo, hi in SIZE_KW:
+            if e and lo <= e < hi: ks.add(k)
+    return ks
+
+PRICE_KW = [("3억-이하", "3억 이하", 0, 30000), ("3억대", "3억대", 30000, 40000), ("4억대", "4억대", 40000, 50000), ("5억대", "5억대", 50000, 60000),
+            ("6억대", "6억대", 60000, 70000), ("7억대", "7억대", 70000, 80000), ("8-9억대", "8~9억대", 80000, 100000), ("10억-이상", "10억 이상", 100000, 10 ** 9)]
+def entry_price(h):
+    ps = [t.get("price") for t in (h.get("types") or []) if t.get("price")]
+    return min(ps) if ps else 0
 
 KW_INDEX = []   # (분류, 이름, url, 단지수)
 ARCHIVE = []    # generate.py가 채움: 수집 기간이 지난 단지(마감)
@@ -795,11 +824,50 @@ def keyword_pages(all_h, updated):
        [h for h in all_h if h.get("cap")], [("분양정보", "/bunyang/"), ("분양가상한제", "/분양/분양가상한제/")], [("전매제한 용어", "/glossary/jeonmae-jehan/"), ("분양가상한제 용어", "/glossary/bunyangga-sanghanje/")])
     mk("주제", "1000세대 이상 대단지", "/분양/대단지/", "1,000세대 이상 대단지 분양 단지입니다. 대단지는 커뮤니티 시설과 관리비 면에서 유리한 경우가 많습니다.",
        [h for h in all_h if h["units"] >= 1000], [("분양정보", "/bunyang/"), ("대단지", "/분양/대단지/")], [])
-    # 6) 키워드 허브
+    # 6) 건설사 자동 인식 (3곳 이상)
+    byc = {}
+    for h in all_h:
+        for c in cnst_names(h): byc.setdefault(c, []).append(h)
+    clist = sorted([(c, v) for c, v in byc.items() if len(v) >= 3], key=lambda kv: -len(kv[1]))
+    for c, items in clist:
+        mk("건설사", f"{c}", f"/건설사/{c}/", f"{c} 시공 아파트·오피스텔 분양 단지의 청약 일정, 분양가, 경쟁률을 모았습니다. 공동 시공 단지도 포함합니다.", items,
+           [("분양정보", "/bunyang/"), (c, f"/건설사/{c}/")], [(f"{c2} 분양", f"/건설사/{_q(c2)}/") for c2, _ in clist if c2 != c][:12],
+           title=f"{c} 분양 단지·청약 일정 {yr}", prio="0.6")
+    # 7) 평형별 (전국 + 시도, 3곳 이상)
+    apt = [h for h in all_h if h["cat"] in ("A", "R", "T")]
+    for k, lab, _, _ in SIZE_KW:
+        items = [h for h in apt if k in size_keys(h)]
+        rel = [(f"{sd} {lab} 분양", f"/분양/{_q(sd + '-' + k + '타입')}/") for sd, _ in G.SIDO if sum(1 for h in items if h["sido"] == sd) >= 3]
+        if len(items) >= 3:
+            mk("평형", f"{lab} 아파트", f"/분양/{k}타입/", f"전국에서 분양하는 전용 {lab} 아파트 단지의 청약 일정, 분양가, 경쟁률입니다.", items,
+               [("분양정보", "/bunyang/"), (lab, f"/분양/{k}타입/")], rel + [(f"{l2} 아파트", f"/분양/{_q(k2 + '타입')}/") for k2, l2, _, _ in SIZE_KW if k2 != k], prio="0.7")
+        for sd, _ in G.SIDO:
+            it2 = [h for h in items if h["sido"] == sd]
+            if len(it2) >= 3:
+                mk("평형", f"{sd} {lab} 아파트", f"/분양/{sd}-{k}타입/", f"{sd} 지역 전용 {lab} 아파트 분양 단지의 청약 일정, 분양가, 경쟁률입니다.", it2,
+                   [("분양정보", "/bunyang/"), (lab, f"/분양/{k}타입/"), (sd, f"/분양/{sd}-{k}타입/")], [(f"전국 {lab}", f"/분양/{_q(k + '타입')}/")] + [(x, u) for x, u in rel if not x.startswith(sd)][:8])
+    # 8) 가격대별 (최저 분양가 기준, 3곳 이상)
+    priced = [h for h in apt if entry_price(h)]
+    for k, lab, lo, hi in PRICE_KW:
+        items = [h for h in priced if lo <= entry_price(h) < hi]
+        if len(items) < 3: continue
+        mk("가격대", f"분양가 {lab} 아파트", f"/분양/{k}/", f"타입별 분양가 중 가장 낮은 금액이 {lab}인 아파트 분양 단지입니다. 실제 계약 금액은 층·옵션에 따라 달라집니다.", items,
+           [("분양정보", "/bunyang/"), (lab, f"/분양/{k}/")], [(f"{l2} 분양", f"/분양/{_q(k2)}/") for k2, l2, lo2, hi2 in PRICE_KW if k2 != k and sum(1 for h in priced if lo2 <= entry_price(h) < hi2) >= 3],
+           title=f"분양가 {lab} 아파트 분양 {yr} | 청약 일정·경쟁률", prio="0.7")
+    # 9) 시군구 × 월 (3곳 이상)
+    for (y, m) in mlist:
+        for (sd, sg), items in sgg_list:
+            it2 = [h for h in items if G.d(h["sp_b"] or h["r_b"]) and (G.d(h["sp_b"] or h["r_b"]).year, G.d(h["sp_b"] or h["r_b"]).month) == (y, m)]
+            if len(it2) < 3: continue
+            mk("지역×월", f"{sd} {sg} {y}년 {m}월 청약", f"/청약일정/{y}년-{m}월-{sd}-{sg}/", f"{sd} {sg}에서 {y}년 {m}월에 청약 접수하는 분양 단지를 접수일 순으로 정리했습니다.", it2,
+               [("청약캘린더", "/calendar/"), (f"{y}년 {m}월", f"/청약일정/{y}년-{m}월/"), (sg, f"/청약일정/{y}년-{m}월-{sd}-{sg}/")],
+               [(f"{y}년 {m}월 전국 청약 일정", f"/청약일정/{_q(f'{y}년-{m}월')}/"), (f"{sd} {sg} 분양", f"/분양/{_q(sd + '-' + sg)}/")],
+               title=f"{sd} {sg} {y}년 {m}월 청약 일정 | {sg} 아파트 청약", prio="0.6")
+    # 10) 키워드 허브
     groups = {}
     for g, kw, url, n in KW_INDEX: groups.setdefault(g, []).append((kw, url, n))
     hb = ['<header class="ph"><p class="cat">KEYWORDS</p><h1>분양·청약 키워드 모음</h1><p class="lead">지역, 유형, 월별 일정, 건설사 브랜드별로 분양·청약 정보를 모아 볼 수 있습니다. 매일 자동으로 업데이트됩니다.</p></header>']
-    for g in ("월별", "유형", "지역", "지역×유형", "브랜드", "주제"):
+    for g in ("월별", "지역×월", "유형", "평형", "가격대", "지역", "지역×유형", "브랜드", "건설사", "주제"):
         if g in groups: hb.append(f'<h2>{g}</h2><div class="kwl">' + "".join(f'<a href="{u}">{esc(k)} <i>{n}</i></a>' for k, u, n in groups[g]) + "</div>")
     G.page(G.ROOT, "/keywords/", "분양·청약 키워드 모음 | 지역·유형·월별·브랜드", "지역별, 유형별, 월별 청약 일정, 건설사 브랜드별 분양 정보를 키워드로 모아 봅니다.",
            "\n".join(hb), [("키워드", "/keywords/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "분양·청약 키워드 모음", "url": G.SITE + "/keywords/"}], og_type="website", updated=updated)
