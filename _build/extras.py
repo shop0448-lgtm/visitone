@@ -392,6 +392,9 @@ def run(all_h, geo, updated):
     try: out += keyword_pages(all_h, updated)
     except Exception as e:
         import traceback; traceback.print_exc()
+    try: out += calc_page(all_h, updated)
+    except Exception:
+        import traceback; traceback.print_exc()
     try: llms_txt(all_h, updated, policy, reps)
     except Exception as e: print("llms error", e)
     return [x if isinstance(x, tuple) else (x, "0.6", "monthly") for x in out]
@@ -419,6 +422,7 @@ def llms_txt(all_h, updated, policy=None, reps=None):
          f"- [분양 뉴스]({S}/news/press/): 분양·청약 관련 언론 보도 모음",
          f"- [정책·제도]({S}/news/policy/): 청약·주택 관련 정부 정책 소식(정책브리핑)",
          f"- [주간 청약 리포트]({S}/news/weekly/): 주간 일정·경쟁률 TOP·무순위 정리",
+         f"- [청약 가점 계산기]({S}/{_q('청약가점계산기')}/): 내 가점(84점 만점) 계산 + 그 점수로 당첨이 나왔던 최근 단지 찾기",
          f"- [청약·분양 가이드]({S}/guide/): 1순위 조건, 가점 계산, 특별공급, 분양 대금, 당첨 후 절차",
          f"- [부동산 용어사전]({S}/glossary/)", "",
          "## 지역별 분양정보", ""]
@@ -920,3 +924,137 @@ def month_links(all_h):
     ms = sorted(k for k, v in c["month"].items() if v >= 2 and _month_ok(k))[-5:]
     if not ms: return ""
     return fixhref('<div class="kwl">' + "".join(f'<a href="/청약일정/{_q(f"{y}년-{m}월")}/">{y}년 {m}월 청약 일정</a>' for y, m in ms) + '<a href="/keywords/">분양 키워드 전체 →</a></div>')
+
+
+# ═════════════════════════ 청약 가점 계산기 (2026-11-11) ═════════════════════════
+def score_rows(hs):
+    """단지별 타입 당첨가점(해당지역 우선) → data/scores.json"""
+    out = []
+    for h in hs:
+        ts = []
+        for c in h.get("cmp") or []:
+            sc = (c.get("score") or {}).get("해당지역") or next(iter((c.get("score") or {}).values()), None)
+            try:
+                lo, av, tp = float(sc[0]), float(sc[1]), float(sc[2])
+                if lo > 0: ts.append([c.get("label") or "", round(lo), round(av, 1), round(tp)])
+            except Exception: pass
+        if ts:
+            out.append({"id": h["id"], "n": h["name"], "s": h["sido"], "a": G.short_addr(h.get("addr") or ""), "d": h.get("win") or h.get("r_b") or "", "t": ts})
+    out.sort(key=lambda x: x["d"], reverse=True)
+    return out
+
+CALC_JS = r"""<script>(function(){
+var $=function(i){return document.getElementById(i)},today=new Date();
+function yrs(a,b){return (b-a)/31557600000}
+function dt(v){return v?new Date(v+'T00:00:00'):null}
+function addY(d,n){var x=new Date(d);x.setFullYear(x.getFullYear()+n);return x}
+function show(){var m=$('mar').value;$('mdw').hidden=(m!=='y');$('spw').hidden=(m!=='y');var h=$('own').value;$('sdw').hidden=(h!=='sold');}
+function calc(){
+ var bd=dt($('bd').value),md=$('mar').value==='y'?dt($('md').value):null,own=$('own').value,sd=dt($('sd').value),jd=dt($('jd').value);
+ var nh=0,nhy=0,msg=[];
+ if(own==='own'){nh=0;msg.push('현재 집을 가지고 있으면 무주택 기간은 0점입니다. (소형·저가 주택 예외는 공고문 확인)')}
+ else if(!bd){msg.push('생년월일의 년·월을 골라 주세요.')}
+ else{var s=addY(bd,30);if(md&&md<s)s=md;if(own==='sold'&&sd&&sd>s)s=sd;
+  if(s>today){nh=0;msg.push('만 30세 전 미혼이면 무주택 기간은 0점입니다. 결혼하면 혼인신고일부터 셉니다.')}
+  else{nhy=yrs(s,today);nh=nhy<1?2:Math.min(32,2*(Math.floor(nhy)+1))}}
+ var dep=($('mar').value==='y'&&$('sp').checked?1:0)+(+$('ch').value||0)+(+$('pa').value||0);
+ var dp=Math.min(35,5+5*dep);
+ var jp=0,jy=0;if(jd){jy=yrs(jd,today);jp=jy<0.5?1:(jy<1?2:Math.min(17,Math.floor(jy)+2))}else msg.push('청약통장 가입일의 년·월을 골라 주세요.');
+ var tot=nh+dp+jp;
+ $('r_nh').textContent=nh;$('r_dp').textContent=dp;$('r_jp').textContent=jp;$('r_tot').textContent=tot;
+ $('r_nhd').textContent=own==='own'?'유주택':(nhy?Math.floor(nhy)+'년 '+Math.floor((nhy%1)*12)+'개월':'-');
+ $('r_dpd').textContent=dep+'명';$('r_jpd').textContent=jd?Math.floor(jy)+'년 '+Math.floor((jy%1)*12)+'개월':'-';
+ $('bar').style.width=(tot/84*100)+'%';$('msg').innerHTML=msg.map(function(x){return '<li>'+x+'</li>'}).join('');
+ prio(jy);$('res').hidden=false;match(tot);
+ try{localStorage.setItem('vo_gajeom',JSON.stringify({bd:$('bd').value,mar:$('mar').value,md:$('md').value,own:$('own').value,sd:$('sd').value,sp:$('sp').checked,ch:$('ch').value,pa:$('pa').value,jd:$('jd').value,rg:$('rg').value,dp:$('dp').value}))}catch(e){}
+}
+function prio(jy){var rg=$('rg').value,dp=+$('dp').value||0,box=$('p1');if(!rg){box.innerHTML='';return}
+ var A=['서울','부산'],B=['인천','대구','광주','대전','울산'],cap=['서울','인천','경기'];
+ var t=A.indexOf(rg)>-1?[300,600,1000,1500]:(B.indexOf(rg)>-1?[250,400,700,1000]:[200,300,400,500]);
+ var lab=['전용 85㎡ 이하','102㎡ 이하','135㎡ 이하','모든 면적'],need=cap.indexOf(rg)>-1?1:0.5;
+ var rows=lab.map(function(l,i){var ok=dp>=t[i];return '<tr><td>'+l+'</td><td>'+t[i].toLocaleString()+'만원</td><td>'+(ok?'<b class="ok">충족</b>':'<b class="no">'+(t[i]-dp).toLocaleString()+'만원 부족</b>')+'</td></tr>'}).join('');
+ var per=jy>=need?'<b class="ok">충족</b> ('+(need===1?'수도권 1년':'비수도권 6개월')+' 이상)':'<b class="no">부족</b> ('+(need===1?'수도권은 1년':'비수도권은 6개월')+' 필요)';
+ box.innerHTML='<h3>민영주택 1순위 확인 ('+rg+' 거주 기준)</h3><table class="tbl"><thead><tr><th>신청 가능 면적</th><th>필요 예치금</th><th>내 통장('+dp.toLocaleString()+'만원)</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+ '<p>청약통장 가입 기간: '+per+'</p><p class="muted">예치금은 단지가 있는 곳이 아니라 <b>내 주민등록 주소</b> 기준이며, 입주자모집공고일까지 채우면 됩니다. 투기과열지구·조정대상지역 단지는 가입 2년 이상·세대주 등 조건이 더 붙습니다. 공공분양(국민주택)은 예치금 대신 납입 횟수·납입 인정 금액으로 봅니다.</p>';}
+var DATA=null;
+function match(tot){var box=$('mt');if(!DATA){fetch('/data/scores.json').then(function(r){return r.json()}).then(function(j){DATA=j.items||[];match(tot)}).catch(function(){box.innerHTML='<p class="muted">당첨 가점 자료를 불러오지 못했습니다.</p>'});return}
+ var sd=$('fs').value,rows=[];
+ DATA.forEach(function(d){if(sd&&d.s!==sd)return;d.t.forEach(function(t){if(t[1]<=tot)rows.push([d,t])})});
+ rows.sort(function(a,b){return b[1][1]-a[1][1]});
+ var near=[];DATA.forEach(function(d){if(sd&&d.s!==sd)return;d.t.forEach(function(t){if(t[1]>tot&&t[1]<=tot+5)near.push([d,t])})});near.sort(function(a,b){return a[1][1]-b[1][1]});
+ function li(x){return '<li><a href="/danji/'+x[0].id+'/"><b>'+x[0].n+'</b><span>'+x[0].s+' · '+x[0].a+' · '+x[1][0]+'타입 최저 '+x[1][1]+'점 (평균 '+x[1][2]+')</span></a></li>'}
+ var seen={},top=[];rows.forEach(function(x){if(!seen[x[0].id]&&top.length<12){seen[x[0].id]=1;top.push(x)}});
+ var s2={},nr=[];near.forEach(function(x){if(!s2[x[0].id]&&nr.length<8){s2[x[0].id]=1;nr.push(x)}});
+ box.innerHTML='<h3>내 점수('+tot+'점)라면 당첨권이었던 최근 단지</h3><p class="muted">해당지역 최저 당첨 가점이 '+tot+'점 이하였던 단지입니다.</p>'+(top.length?'<ul class="gl mt">'+top.map(li).join('')+'</ul>':'<p class="muted">조건에 맞는 단지가 없습니다. 추첨제·특별공급·무순위를 확인해 보세요.</p>')+
+ (nr.length?'<h3>조금만 더 (최저 가점이 내 점수보다 1~5점 높았던 단지)</h3><ul class="gl mt">'+nr.map(li).join('')+'</ul>':'');}
+document.querySelectorAll('.ymd-s').forEach(function(g){var h=$(g.dataset.for),q=function(p){return g.querySelector('[data-p='+p+']')};
+ function sync(){var y=q('y').value,m=q('m').value,d=q('d').value||'01';h.value=(y&&m)?y+'-'+m+'-'+d:''}
+ g.addEventListener('change',sync);g._set=function(v){if(!v)return;var a=v.split('-');q('y').value=a[0];q('m').value=a[1];q('d').value=a[2]||'01';sync()}});
+function setD(i,v){var g=document.querySelector('.ymd-s[data-for='+i+']');if(g&&g._set)g._set(v)}
+['mar','own'].forEach(function(i){$(i).addEventListener('change',show)});
+$('cf').addEventListener('submit',function(e){e.preventDefault();calc()});$('fs').addEventListener('change',function(){if(!$('res').hidden)calc()});
+try{var v=JSON.parse(localStorage.getItem('vo_gajeom')||'null');if(v){Object.keys(v).forEach(function(k){var el=$(k);if(!el)return;if(el.type==='checkbox')el.checked=v[k];else if(el.type==='hidden')setD(k,v[k]);else el.value=v[k]});show();}}catch(e){}
+show();})();</script>"""
+
+def ymd(i, label, y_hi, y_lo, required=False, wrap_id="", hidden=False):
+    ys = "".join(f'<option value="{y}">{y}년</option>' for y in range(y_hi, y_lo - 1, -1))
+    ms = "".join(f'<option value="{m:02d}">{m}월</option>' for m in range(1, 13))
+    ds = "".join(f'<option value="{d:02d}">{d}일</option>' for d in range(1, 32))
+    return (f'<div class="ymd"{f' id="{wrap_id}"' if wrap_id else ""}{" hidden" if hidden else ""}><span class="ymd-l">{label}</span><div class="ymd-s" data-for="{i}">'
+            f'<select aria-label="{label} 년" data-p="y"><option value="">년</option>{ys}</select>'
+            f'<select aria-label="{label} 월" data-p="m"><option value="">월</option>{ms}</select>'
+            f'<select aria-label="{label} 일" data-p="d"><option value="">일</option>{ds}</select></div>'
+            f'<input type="hidden" id="{i}"></div>')
+
+def calc_page(all_h, updated):
+    rows = score_rows(list(all_h) + [h for h in ARCHIVE if h["id"] not in {x["id"] for x in all_h}])
+    _save("scores.json", {"updated": updated, "items": rows})
+    sido = "".join(f'<option value="{esc(s)}">{esc(s)}</option>' for s, _ in G.SIDO)
+    opt = lambda n: "".join(f'<option value="{i}">{i}명</option>' for i in range(n + 1))
+    faq = [("청약 가점은 몇 점 만점인가요?", "84점 만점입니다. 무주택 기간 32점, 부양가족 수 35점, 청약통장 가입 기간 17점으로 구성됩니다."),
+           ("무주택 기간은 언제부터 세나요?", "만 30세가 되는 날과 혼인신고일 중 빠른 날부터 셉니다. 그 뒤에 집을 처분했다면 마지막으로 무주택자가 된 날부터 셉니다."),
+           ("부양가족에는 누가 들어가나요?", "같은 세대의 배우자, 자녀, 그리고 3년 이상 같은 주민등록표에 있는 직계존속(부모 등)이 들어갑니다. 본인은 빼고 셉니다."),
+           ("청약통장에 얼마가 있어야 1순위인가요?", "민영주택은 주민등록 주소 기준으로 예치금이 필요합니다. 전용 85㎡ 이하 기준 서울·부산 300만 원, 그 밖의 광역시 250만 원, 그 밖의 시·군 200만 원이며, 면적이 커질수록 금액이 올라갑니다."),
+           ("계산 결과가 청약홈과 다르면 어떻게 하나요?", "이 계산기는 참고용입니다. 청약 신청 전 청약홈의 가점 계산기와 해당 단지 입주자모집공고 기준으로 반드시 다시 확인하세요.")]
+    body = (f'<header class="ph"><p class="cat">TOOL</p><h1>청약 가점 계산기</h1><p class="lead">생년월일, 결혼, 주택 소유, 가족, 청약통장 가입일만 넣으면 내 청약 가점(84점 만점)을 바로 계산하고, '
+            f'<b>내 점수로 당첨이 나왔던 최근 단지</b>까지 찾아드립니다. 입력한 정보는 서버로 보내지 않고 이 기기 안에서만 계산합니다.</p></header>'
+            '<form id="cf" class="calcf"><div class="cg">'
+            + ymd("bd", "생년월일", G.TODAY.year - 18, 1935) +
+            '<label>결혼 여부<select id="mar"><option value="n">미혼</option><option value="y">기혼</option></select></label>'
+            + ymd("md", "혼인신고일", G.TODAY.year, 1960, wrap_id="mdw", hidden=True) +
+            '<label>주택 소유<select id="own"><option value="none">무주택 (집을 가져본 적 없음)</option><option value="sold">무주택 (예전에 있었지만 처분함)</option><option value="own">현재 집이 있음</option></select></label>'
+            + ymd("sd", "집을 처분한 날", G.TODAY.year, 1970, wrap_id="sdw", hidden=True) +
+            '<label id="spw" hidden class="chk"><input type="checkbox" id="sp" checked> 배우자 (부양가족에 포함)</label>'
+            f'<label>자녀 수 (미혼 자녀)<select id="ch">{opt(6)}</select></label>'
+            f'<label>3년 이상 같이 사는 부모·조부모<select id="pa">{opt(4)}</select></label>'
+            + ymd("jd", "청약통장 가입일", G.TODAY.year, 1977) +
+            f'<label>사는 곳(주민등록 주소)<select id="rg"><option value="">선택 안 함</option>{sido}</select></label>'
+            '<label>청약통장 예치금(잔액, 만원)<input type="number" id="dp" inputmode="numeric" min="0" step="10" placeholder="예: 300"></label>'
+            '</div><button class="pbtn" type="submit">내 가점 계산하기</button></form>'
+            '<section id="res" class="calcr" hidden aria-live="polite"><div class="ctot"><small>내 청약 가점</small><b><span id="r_tot">0</span><i>/ 84점</i></b><div class="cbar"><span id="bar"></span></div></div>'
+            '<table class="tbl"><thead><tr><th>항목</th><th>내 상황</th><th>점수</th><th>만점</th></tr></thead><tbody>'
+            '<tr><td>무주택 기간</td><td id="r_nhd">-</td><td><b id="r_nh">0</b></td><td>32</td></tr>'
+            '<tr><td>부양가족 수</td><td id="r_dpd">-</td><td><b id="r_dp">0</b></td><td>35</td></tr>'
+            '<tr><td>청약통장 가입 기간</td><td id="r_jpd">-</td><td><b id="r_jp">0</b></td><td>17</td></tr></tbody></table>'
+            '<ul class="cmsg" id="msg"></ul><div id="p1"></div>'
+            f'<p><label>지역 <select id="fs"><option value="">전국</option>{sido}</select></label></p><div id="mt"></div>'
+            '<div class="consult"><h2>매주 청약 일정 받기</h2><p>내 점수에 맞는 단지가 언제 나올지 놓치지 않도록, 매주 청약 일정을 카톡으로 보내드립니다.</p>'
+            f'<div class="kch"><a class="kch-btn" href="{G.KAKAO_CH}" rel="noopener">카카오톡으로 매주 청약 일정 받기</a></div></div></section>'
+            '<h2>1순위·부적격 자가 체크</h2><ul class="check">'
+            '<li>투기과열지구·조정대상지역 단지는 <b>세대주</b>만 1순위로 신청할 수 있습니다.</li>'
+            '<li>최근 5년 안에 세대원 중 누구라도 다른 주택에 당첨됐다면 규제지역 1순위가 제한됩니다.</li>'
+            '<li>세대가 2주택 이상이면 1순위 신청이 제한됩니다.</li>'
+            '<li>부모님을 부양가족으로 넣으려면 3년 이상 같은 주민등록표에 올라 있어야 합니다.</li>'
+            '<li>가점을 실제보다 높게 넣으면 당첨 후 <b>부적격</b>으로 취소되고 일정 기간 청약이 막힙니다.</li></ul>'
+            '<p>자세한 기준: <a href="/guide/cheongyak-gajeom-calc/">청약 가점 계산법</a> · <a href="/guide/cheongyak-1st-priority/">1순위 조건</a> · <a href="/guide/special-supply-types/">특별공급 종류</a></p>'
+            '<section class="faq"><h2>자주 묻는 질문</h2>' + "".join(f"<details><summary>{esc(a)}</summary><p>{esc(b)}</p></details>" for a, b in faq) + '</section>'
+            f'<p class="muted">계산 기준: 주택공급에 관한 규칙 가점제 기준(오늘 날짜 기준). 참고용이며 실제 자격은 청약홈과 입주자모집공고를 확인하세요. 단지별 당첨 가점: 한국부동산원 청약홈 공공데이터 · 기준일 {updated}</p>'
+            + CALC_JS)
+    ld = [{"@context": "https://schema.org", "@type": "WebPage", "name": "청약 가점 계산기", "dateModified": updated, "inLanguage": "ko-KR",
+           "abstract": "무주택 기간·부양가족 수·청약통장 가입 기간으로 청약 가점(84점 만점)을 계산하고, 그 점수로 당첨이 나왔던 최근 분양 단지를 찾아주는 계산기",
+           "isPartOf": {"@type": "WebSite", "name": "VISIT ONE 비지트원", "url": G.SITE + "/"}},
+          {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in faq]}]
+    url = kpage("/청약가점계산기/", f"청약 가점 계산기 {G.TODAY.year} | 84점 만점 내 점수 바로 계산 · 당첨 가능 단지",
+                "청약 가점 계산기: 무주택 기간, 부양가족 수, 청약통장 가입 기간으로 내 가점(84점 만점)을 바로 계산하고, 내 점수로 당첨이 나왔던 최근 아파트 분양 단지를 찾아보세요.",
+                body, [("청약 가점 계산기", "/청약가점계산기/")], ld, updated)
+    return [(url, "0.9", "daily")]

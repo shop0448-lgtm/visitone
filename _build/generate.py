@@ -431,7 +431,7 @@ def cmp_box(h):
         head = "<th>타입</th><th>공급</th><th>접수</th><th>경쟁률</th><th>결과</th>"
         trs = "".join(f'<tr><td><b>{esc(c["label"])}</b></td><td>{c["sup"]:,}</td><td>{c["tot"]:,}</td><td class="pr">{cr_txt(c["rate"])}</td><td><span class="rs{" rs-x" if c["res"].startswith("미달") else ""}">{esc(c["res"])}</span></td></tr>' for c in cs)
     avg = f'<p class="cr-sum">전체 평균 {"1순위 " if h["cat"] == "A" else ""}경쟁률 <b>{cr_txt(h["rate_all"])}</b></p>' if h.get("rate_all") else ""
-    return f'<h2>청약 경쟁률</h2>{avg}<div class="tw"><table class="tbl dt cr"><thead><tr>{head}</tr></thead><tbody>{trs}</tbody></table></div><p class="muted">※ 청약홈 접수 결과 기준이며, 은행 전산 사정에 따라 최종 결과와 일부 다를 수 있습니다.</p>'
+    return f'<h2>청약 경쟁률</h2>{avg}<div class="tw"><table class="tbl dt cr"><thead><tr>{head}</tr></thead><tbody>{trs}</tbody></table></div><p class="muted">※ 청약홈 접수 결과 기준이며, 은행 전산 사정에 따라 최종 결과와 일부 다를 수 있습니다.</p>' + ('<p><a class="onmap" href="/%EC%B2%AD%EC%95%BD%EA%B0%80%EC%A0%90%EA%B3%84%EC%82%B0%EA%B8%B0/">내 청약 가점 계산해 보기 →</a></p>' if h["cat"] == "A" and any(c.get("score") for c in cs) else "")
 
 def sp_box(h):
     rows = [t for t in h["types"] if t.get("sp")]
