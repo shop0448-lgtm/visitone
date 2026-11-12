@@ -10,7 +10,7 @@ MARK = ('<svg class="mk" viewBox="0 0 80 100" aria-hidden="true"><path d="M10 96
         '<path d="M50 22 L50 96" fill="none" stroke="currentColor" stroke-width="5"/></svg>')
 
 NAV = ('<a href="/bunyang/">분양정보</a><a href="/map/">분양맵</a><a href="/calendar/">청약캘린더</a><a href="/remain/">무순위·잔여</a>'
-       '<a href="/#sites">추천 현장</a><a href="/news/">분양 소식</a><a href="/guide/">가이드</a>')
+       '<a href="/%EC%B2%AD%EC%95%BD%EA%B0%80%EC%A0%90%EA%B3%84%EC%82%B0%EA%B8%B0/">가점 계산기</a><a href="/#sites">추천 현장</a><a href="/news/">분양 소식</a>')
 
 BIZ = ("상호 제이에이치기획 · 대표 하진훈 · 사업자등록번호 504-28-48757 · 통신판매업 신고 2021-진건퇴계원-278<br>"
        "경기도 남양주시 진건오남로105번길 6, 상가 303 · shop0448@gmail.com")

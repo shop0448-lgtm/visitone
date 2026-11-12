@@ -357,16 +357,20 @@ def news_hub(reps, policy, updated, news=None):
         s = open(f, encoding="utf-8").read()
         t = re.search(r"<h1>(.*?)</h1>", s); dte = re.search(r'"datePublished":\s*"([^"]+)"', s); ds = re.search(r'<meta name="description" content="([^"]*)"', s)
         if t: own.append(dict(slug=slug, title=_html.unescape(re.sub("<[^>]+>", "", t.group(1))), date=(dte.group(1) if dte else ""), desc=_html.unescape(ds.group(1)) if ds else ""))
+    for f in glob.glob(os.path.join(G.ROOT, "guide", "*", "index.html")):
+        s = open(f, encoding="utf-8").read()
+        t = re.search(r"<h1>(.*?)</h1>", s); dte = re.search(r'"datePublished":\s*"([^"]+)"', s); ds = re.search(r'<meta name="description" content="([^"]*)"', s)
+        if t: own.append(dict(slug=f.split(os.sep)[-2], title=_html.unescape(re.sub("<[^>]+>", "", t.group(1))), date=(dte.group(1) if dte else ""), desc=_html.unescape(ds.group(1)) if ds else "", guide=True))
     own.sort(key=lambda x: x["date"], reverse=True)
     w = "".join(f'<li><a href="/news/weekly/{r["id"]}/"><small class="nd">주간 리포트 · {r["date"]}</small><b>{esc(r["title"])}</b><span>{esc(r["lead"][:110])}</span></a></li>' for r in reps[:4])
     p = "".join(f'<li><a href="/news/policy/{x["id"]}/"><small class="nd">정책·제도 · {x["date"]} · {esc(x["min"])}</small><b>{esc(x["title"])}</b><span>{esc(plain(x["sub"] or x["body"], 110))}</span></a></li>' for x in policy[:8])
-    o = "".join(f'<li><a href="/news/{x["slug"]}/"><small class="nd">VISIT ONE · {x["date"]}</small><b>{esc(x["title"])}</b><span>{esc(x["desc"][:110])}</span></a></li>' for x in own)
+    o = "".join(f'<li><a href="/{"guide" if x.get("guide") else "news"}/{x["slug"]}/"><small class="nd">{"청약 가이드" if x.get("guide") else "VISIT ONE"} · {x["date"]}</small><b>{esc(x["title"])}</b><span>{esc(x["desc"][:110])}</span></a></li>' for x in own)
     nw = "".join(f'<li><a href="{esc(x["url"])}" target="_blank" rel="noopener nofollow"><small class="nd">분양 뉴스 · {esc(x["src"])} · {esc(x["date"][:10])}</small><b>{esc(x["title"])}</b><span>{esc(x["desc"][:110])}</span></a></li>' for x in (news or [])[:6])
     body = (f'<header class="ph"><p class="cat">NEWS</p><h1>분양 소식</h1><p class="lead">매주 청약 리포트와 부동산 정책·제도 변화를 한곳에서 확인하세요. 매일 자동으로 업데이트됩니다.</p></header>'
             f'<h2 class="nh">주간 청약 리포트 <a href="/news/weekly/">전체 보기 →</a></h2><ul class="gl">{w}</ul>'
             + (f'<h2 class="nh">분양 뉴스 <a href="/news/press/">전체 보기 →</a></h2><ul class="gl">{nw}</ul>' if nw else "")
             + f'<h2 class="nh">정책·제도 <a href="/news/policy/">전체 보기 →</a></h2><ul class="gl">{p or "<li class=none>수집 중입니다.</li>"}</ul>'
-            + (f'<h2 class="nh">VISIT ONE 소식</h2><ul class="gl">{o}</ul>' if o else ""))
+            + (f'<h2 class="nh">VISIT ONE 소식 <a href="/guide/">가이드 전체 →</a></h2><ul class="gl">{o}</ul>' if o else ""))
     G.page(G.ROOT, "/news/", "분양 소식 · 주간 청약 리포트 · 정책·제도", "매주 청약 일정 리포트와 청약·분양·주택 정책 소식을 매일 업데이트합니다. 비지트원 VISIT ONE 분양 소식.",
            body, [("분양 소식", "/news/")], [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "분양 소식", "url": G.SITE + "/news/"}], og_type="website", updated=updated)
     return [("/news/", "0.8", "daily")]

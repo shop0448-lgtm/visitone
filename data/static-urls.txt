@@ -53,6 +53,10 @@
 /guide/model-house-visit/|0.7|monthly
 /guide/apartment-area-guide/|0.7|monthly
 /guide/jiyeok-jutaek-johap-checklist/|0.7|monthly
+/guide/sinhon-special-supply/|0.7|monthly
+/guide/first-home-special-supply/|0.7|monthly
+/guide/newborn-special-supply/|0.7|monthly
+/guide/low-gajeom-strategy/|0.7|monthly
 /guide/|0.8|monthly
 /area/dongdaemun/|0.8|monthly
 /about/|0.5|monthly
