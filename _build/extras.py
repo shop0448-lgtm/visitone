@@ -449,7 +449,7 @@ def llms_txt(all_h, updated, policy=None, reps=None):
         st = G.status(h)[1]; pr = G.price_range(h)
         L.append(f"- [{h['name']}]({S}/danji/{h['id']}/): {G.short_addr(h['addr'])} · {G.cat_label(h)} {h['units']:,}세대 · {st}" + (f" · 접수 {h['sp_b'] or h['r_b']}" if (h['sp_b'] or h['r_b']) else "") + (f" · 분양가 {pr}" if pr else ""))
     L += ["", f"전체 진행 단지의 핵심 정보는 [{S}/llms-full.txt]({S}/llms-full.txt)에 있습니다.", "",
-          "## 제휴 현장 (광고)", "", f"- [청량리 시그니처]({S}/cheongnyangni/): 서울 동대문구 전농동 지역주택조합 조합원 모집. VISIT ONE 제휴 현장(광고)입니다.", "",
+          "## 제휴 현장 (광고)", "", f"- [청량리 시그니처]({S}/cheongnyangni/): 서울 동대문구 전농동 지역주택조합 조합원 모집. VISIT ONE 제휴 현장(광고)입니다.", f"- [화서역 호수공원 아너스빌]({S}/hwaseo-honorsville/): 경기 수원시 권선구 서둔동 476세대 민간분양 잔여세대. VISIT ONE 제휴 현장(광고)입니다.", "",
           "## 이용 안내", "", "- 청약 자격·일정은 반드시 청약홈 입주자모집공고 원문을 확인하세요.", "- 인용 시 출처를 'VISIT ONE 비지트원(visitone.co.kr), 청약홈 공공데이터 기반'으로 표기해 주세요."]
     open(os.path.join(G.ROOT, "llms.txt"), "w", encoding="utf-8").write("\n".join(L) + "\n")
     F = [f"# VISIT ONE 비지트원 · 진행 중 분양 단지 전체 ({updated} 기준)", "", "> 각 단지의 핵심 사실입니다. 출처: 한국부동산원 청약홈 공공데이터. 상세 페이지 링크를 함께 표기합니다.", ""]

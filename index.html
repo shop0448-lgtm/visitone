@@ -630,7 +630,7 @@ header .wrap{height:68px}
     <p class="sites-note">제휴 현장은 사업 주체가 제공한 자료를 바탕으로 한 광고이며, VISIT ONE은 해당 현장으로부터 소정의 수수료를 받습니다.</p>
     <div class="filters" id="filters" role="group" aria-label="현장 필터"></div>
     
-    <div class="sites" id="siteList"><article class="site"><div class="ph"><img src="img/site_cheongnyangni.jpg" alt="청량리 시그니처 조감도"><span class="badge open">모집중</span><span class="badge pass">건축심의 통과</span><span class="adtag">광고 · VISIT ONE 제휴 현장</span></div><div class="bd"><div class="type">지역주택조합 · 조합원 모집</div><h3>청량리 시그니처</h3><div class="addr">서울 동대문구 전농동 60-22번지 일원</div><dl><div><dt>세대수</dt><dd>556세대</dd></div><div><dt>규모</dt><dd>B3~20F · 9개동</dd></div><div><dt>타입</dt><dd>59·74·84㎡</dd></div></dl><div class="tags"><span>건축심의 통과</span><span>지구단위계획 고시 완료</span><span>청량리역 생활권</span><span>면목선 전농역(예정)</span></div><div class="act"><a href="cheongnyangni/">현장 자세히 보기</a><a class="primary" href="#reserve">방문 예약</a></div></div></article></div>
+    <div class="sites" id="siteList"><article class="site"><div class="ph"><img src="img/site_hwaseo.jpg" alt="화서역 호수공원 아너스빌 투시도"><span class="badge open">모집중</span><span class="badge pass">중도금 전액 무이자</span><span class="adtag">광고 · VISIT ONE 제휴 현장</span></div><div class="bd"><div class="type">민간분양 · 잔여세대 선착순</div><h3>화서역 호수공원 아너스빌</h3><div class="addr">경기 수원시 권선구 서둔동 212-1번지 일원</div><dl><div><dt>세대수</dt><dd>476세대</dd></div><div><dt>규모</dt><dd>B4~15F · 7개동</dd></div><div><dt>타입</dt><dd>84·94·99㎡</dd></div></dl><div class="tags"><span>서호공원 바로 앞</span><span>계약금 2천만원</span><span>발코니 무상확장</span><span>신분당선 연장(예정)</span></div><div class="act"><a href="hwaseo-honorsville/">현장 자세히 보기</a><a class="primary" href="#reserve">방문 예약</a></div></div></article><article class="site"><div class="ph"><img src="img/site_cheongnyangni.jpg" alt="청량리 시그니처 조감도"><span class="badge open">모집중</span><span class="badge pass">건축심의 통과</span><span class="adtag">광고 · VISIT ONE 제휴 현장</span></div><div class="bd"><div class="type">지역주택조합 · 조합원 모집</div><h3>청량리 시그니처</h3><div class="addr">서울 동대문구 전농동 60-22번지 일원</div><dl><div><dt>세대수</dt><dd>556세대</dd></div><div><dt>규모</dt><dd>B3~20F · 9개동</dd></div><div><dt>타입</dt><dd>59·74·84㎡</dd></div></dl><div class="tags"><span>건축심의 통과</span><span>지구단위계획 고시 완료</span><span>청량리역 생활권</span><span>면목선 전농역(예정)</span></div><div class="act"><a href="cheongnyangni/">현장 자세히 보기</a><a class="primary" href="#reserve">방문 예약</a></div></div></article></div>
   </div>
 </section>
 <section id="learn" class="light" style="padding:110px 0">
@@ -767,6 +767,22 @@ const CONFIG = {
 
 /* ============ 현장 목록: 현장이 늘면 여기에 추가 ============ */
 const SITES = [
+ {
+    id: "hwaseo-honorsville",
+    name: "화서역 호수공원 아너스빌",
+    type: "민간분양 · 잔여세대 선착순",
+    status: "open",
+    highlight: "중도금 전액 무이자",
+    addr: "경기 수원시 권선구 서둔동 212-1번지 일원",
+    img: "img/site_hwaseo.jpg",
+    stats: [["세대수","476세대"],["규모","B4~15F · 7개동"],["타입","84·94·99㎡"]],
+    tags: ["서호공원 바로 앞","계약금 2천만원","발코니 무상확장","신분당선 연장(예정)"],
+    units: ["84A","84B","84C","84D","84E","94A","94B","99A"],
+    url: "hwaseo-honorsville/",
+    office: "",
+    slots: ["10:00","11:00","13:00","14:00","15:00","16:00"],
+    closedDays: []
+  },
   {
     id: "cheongnyangni",
     name: "청량리 시그니처",

@@ -777,7 +777,7 @@ def geocode_all(all_h):
     print("geocoded", n)
     return geo
 
-KO_ALIAS = [("cheongnyangni", "청량리시그니처")]
+KO_ALIAS = [("cheongnyangni", "청량리시그니처"), ("hwaseo-honorsville", "화서역호수공원아너스빌")]
 
 def make_aliases():
     """제휴 현장 한글 주소 사본 생성 (/청량리시그니처/) — 원본과 같은 내용, 대표 주소(canonical)는 한글 주소"""
