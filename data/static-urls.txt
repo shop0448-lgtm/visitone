@@ -68,3 +68,4 @@
 /news/cheongnyangni-signature-architecture-review/|0.7|daily
 /news/2026-jiyeok-jutaek-johap-reform/|0.7|daily
 /partner/|0.5|monthly
+/lp/003-changwon-xi-the-sky|0.9|weekly
