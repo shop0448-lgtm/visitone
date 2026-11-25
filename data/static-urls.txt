@@ -69,3 +69,4 @@
 /news/2026-jiyeok-jutaek-johap-reform/|0.7|daily
 /partner/|0.5|monthly
 /lp/003-changwon-xi-the-sky|0.9|weekly
+/lp/004-hyangnam-lottecastle-signature|0.9|weekly
