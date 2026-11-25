@@ -398,7 +398,7 @@ footer{padding:22px 22px 40px;font-size:11.5px;color:#7c827d;line-height:1.8;bac
   </footer>
 
   <nav class="bar">
-    <button class="b1" data-open="visit">홍보관 방문예약</button>
+    <button class="b1" data-open="price">관심고객 등록</button>
     <button class="b2" data-open="price">시세비교표 받기</button>
   </nav>
 
@@ -443,8 +443,8 @@ footer{padding:22px 22px 40px;font-size:11.5px;color:#7c827d;line-height:1.8;bac
       <div class="seg"><input type="radio" name="housing" value="무주택" checked><label>무주택</label><input type="radio" name="housing" value="85㎡이하 1주택"><label>85㎡↓ 1주택</label><input type="radio" name="housing" value="기타"><label>그 외</label></div>
     </div>
     <div class="row2" data-visit>
-      <div class="field"><label>방문 희망일</label><input name="visit_date" type="date"></div>
-      <div class="field"><label>희망 시간</label><select name="visit_time"><option value="">선택</option><option>10:00</option><option>11:00</option><option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option></select></div>
+      <div class="field"><label>방문 희망일 (선택)</label><input name="visit_date" type="date"></div>
+      <div class="field"><label>희망 시간 (선택)</label><select name="visit_time"><option value="">선택</option><option>10:00</option><option>11:00</option><option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option><option>17:00</option></select></div>
     </div>
     <label class="agree"><input type="checkbox" name="agree"><span>[필수] 개인정보 수집·이용 동의<button type="button" data-terms>보기</button></span></label>
     <div class="terms" data-terms-box></div>
@@ -487,9 +487,9 @@ let fid=0;
 function buildForm(kind,where){
   const full=kind==="visit";const f=$("#formTpl").content.cloneNode(true);const form=f.querySelector("form");
   form.dataset.type=where;
-  $("[data-title]",f).textContent=full?"홍보관 방문 예약":"시세비교표 받기";
+  $("[data-title]",f).textContent=full?"관심고객 등록 · 방문 상담":"시세비교표 받기";
   $("[data-sub]",f).textContent=full?"예약 방문 시 대기 없이 1:1로 상담해 드립니다":"30초 등록 · 같은 동네 시세와 비교한 자료를 보내드립니다";
-  $("[data-btn]",f).textContent=full?"방문 예약하기":"무료로 비교표 받기";
+  $("[data-btn]",f).textContent=full?"관심고객 등록하기":"무료로 비교표 받기";
   if(!full)$("[data-visit]",f).remove();
   $("[data-terms-box]",f).textContent=CONFIG.privacyText;
   $$(".seg input",f).forEach(inp=>{const id="r"+(fid++);inp.id=id;inp.nextElementSibling.htmlFor=id});
@@ -527,7 +527,7 @@ document.addEventListener("submit",async e=>{
       const F=CONFIG.googleForm.fields,body=new URLSearchParams();
       const src=[TRACK.utm_source,TRACK.utm_medium,TRACK.utm_campaign,TRACK.utm_content].filter(Boolean).join(" / ")||(TRACK.gclid?"google ads":TRACK.fbclid?"meta":TRACK.referrer);
       const vals={현장:CONFIG.siteName,방문일:payload.visit_date,방문시간:payload.visit_time,성함:name,연락처:phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/,"$1-$2-$3"),인원:"",
-        관심타입:payload.form.indexOf("visit")>-1?"홍보관 방문예약":"시세비교표 요청",
+        관심타입:payload.form.indexOf("visit")>-1?(payload.visit_date?"방문예약":"관심고객 등록"):"시세비교표 요청",
         요청사항:"주택소유: "+payload.housing+" | 유입: "+src+(TRACK.gclid?" | gclid":"")};
       Object.keys(F).forEach(k=>body.append(F[k],vals[k]||""));
       await fetch(CONFIG.googleForm.action,{method:"POST",mode:"no-cors",body});
